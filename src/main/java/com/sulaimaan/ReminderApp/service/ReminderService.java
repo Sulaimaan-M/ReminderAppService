@@ -10,27 +10,30 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReminderService {
 
     private final ReminderRepository repo;
     private final ReminderSchedulingService schedulingService;
-    private final DeviceTokenService deviceTokenService; // ← ADD THIS
+    private final DeviceTokenService deviceTokenService;
 
     @Autowired
     public ReminderService(
             ReminderRepository repo,
             ReminderSchedulingService schedulingService,
-            DeviceTokenService deviceTokenService) { // ← ADD THIS
+            DeviceTokenService deviceTokenService) {
         this.repo = repo;
         this.schedulingService = schedulingService;
-        this.deviceTokenService = deviceTokenService; // ← ADD THIS
+        this.deviceTokenService = deviceTokenService;
     }
 
+    // === CREATE ===
+// In ReminderService.java
     public boolean createReminder(ReminderDTO reminderDTO) {
         try {
-            // Validate
             if (reminderDTO.remindAt == null) {
                 System.out.println("❌ remindAt is required");
                 return false;
@@ -46,14 +49,17 @@ public class ReminderService {
             reminder.setRemindAt(reminderDTO.remindAt.withZoneSameInstant(ZoneOffset.UTC));
             reminder.setIntervalType(reminderDTO.interval);
 
-            // 👇 NEW: Handle FCM token → DeviceToken
-            if (reminderDTO.fcmToken != null && !reminderDTO.fcmToken.trim().isEmpty()) {
-                DeviceToken deviceToken = deviceTokenService.registerDevice(reminderDTO.fcmToken);
+            // 👇 NEW: Use deviceTokenId to fetch DeviceToken
+            if (reminderDTO.deviceTokenId != null) {
+                DeviceToken deviceToken = deviceTokenService.getDeviceTokenById(reminderDTO.deviceTokenId);
+                if (deviceToken == null) {
+                    System.out.println("❌ DeviceToken not found with ID: " + reminderDTO.deviceTokenId);
+                    return false;
+                }
                 reminder.setDeviceToken(deviceToken);
             }
 
-            reminder = repo.save(reminder); // Now has ID
-
+            reminder = repo.save(reminder);
             schedulingService.scheduleReminder(reminder);
             return true;
 
@@ -63,4 +69,65 @@ public class ReminderService {
             return false;
         }
     }
+
+    // === UPDATE (EDIT) ===
+    // In ReminderService.java
+    public boolean updateReminder(Long id, ReminderDTO dto) {
+        try {
+            Reminder reminder = repo.findById(id).orElse(null);
+            if (reminder == null) {
+                System.out.println("❌ Reminder not found: " + id);
+                return false;
+            }
+
+            schedulingService.unscheduleReminder(id);
+
+            reminder.setText(dto.reminderTxt);
+            reminder.setRemindAt(dto.remindAt.withZoneSameInstant(ZoneOffset.UTC));
+            reminder.setIntervalType(dto.interval);
+
+            // 👇 Handle deviceTokenId (not FCM token string)
+            if (dto.deviceTokenId != null) {
+                DeviceToken deviceToken = deviceTokenService.getDeviceTokenById(dto.deviceTokenId);
+                if (deviceToken == null) {
+                    System.out.println("❌ DeviceToken not found with ID: " + dto.deviceTokenId);
+                    return false;
+                }
+                reminder.setDeviceToken(deviceToken);
+            }
+            // If deviceTokenId is null, we keep the existing link (or leave it null)
+
+            reminder = repo.save(reminder);
+            schedulingService.scheduleReminder(reminder);
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("❌ Error updating reminder: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // === DELETE ===
+    public boolean deleteReminder(Long id) {
+        try {
+            // 1. Cancel job first
+            schedulingService.unscheduleReminder(id);
+
+            // 2. Delete from database
+            repo.deleteById(id);
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("❌ Error deleting reminder: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // In ReminderService.java
+    public List<Reminder> getRemindersByToken(String fcmToken) {
+        return repo.findByDeviceToken_FcmToken(fcmToken);
+    }
+
 }

@@ -12,5 +12,5 @@ public class ReminderDTO {
 
     public IntervalType interval;
 
-    public String fcmToken;
+    public Long deviceTokenId;
 }

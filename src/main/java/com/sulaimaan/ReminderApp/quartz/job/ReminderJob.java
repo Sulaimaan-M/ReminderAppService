@@ -1,5 +1,7 @@
+// com.sulaimaan.ReminderApp.quartz.job.ReminderJob.java
 package com.sulaimaan.ReminderApp.quartz.job;
 
+import com.sulaimaan.ReminderApp.service.NotificationService;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -13,7 +15,6 @@ import java.time.ZonedDateTime;
 @Component
 public class ReminderJob implements Job {
 
-    // Static reference to Spring context (needed because Quartz creates this job, not Spring)
     private static ApplicationContext applicationContext;
 
     @Autowired
@@ -26,19 +27,23 @@ public class ReminderJob implements Job {
         try {
             JobDataMap data = jobExecutionContext.getJobDetail().getJobDataMap();
             String message = data.getString("message");
+            String fcmToken = data.getString("fcmToken"); // ← Now we expect this
 
             System.out.println("🔔 Reminder triggered: " + message);
             System.out.println("🕒 Executed at: " + ZonedDateTime.now());
 
-            // TODO: Get FCM token from JobDataMap once we start saving it in reminders
-            // For now, we skip sending notification because we don't have a token yet.
-            // Later, this will be: String fcmToken = data.getString("fcmToken");
-            // And then: notificationService.sendPushNotification(fcmToken, message);
-
-            System.out.println("ℹ️ Skipping push notification (FCM token not available yet).");
+            // Send push notification if FCM token is available
+            if (fcmToken != null && !fcmToken.trim().isEmpty()) {
+                NotificationService notificationService =
+                        applicationContext.getBean(NotificationService.class);
+                notificationService.sendPushNotification(fcmToken, message);
+            } else {
+                System.out.println("⚠️ No FCM token provided. Skipping push notification.");
+            }
 
         } catch (Exception e) {
             System.out.println("❌ Error in ReminderJob: " + e.getMessage());
+            e.printStackTrace();
             throw new JobExecutionException(e);
         }
     }

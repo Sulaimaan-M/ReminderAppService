@@ -24,40 +24,36 @@ public class ReminderSchedulingService {
      * Schedules a Quartz job to trigger at the reminder's remindAt time.
      * Includes FCM token and message in JobDataMap for the job to use.
      */
+    // In ReminderSchedulingService.java
     public void scheduleReminder(Reminder reminder) {
         try {
-            // Build JobDataMap with everything the job needs
             JobDataMap jobDataMap = new JobDataMap();
             jobDataMap.put("message", reminder.getText());
-            //jobDataMap.put("fcmToken", reminder.getFcmToken()); // or deviceToken, etc.
             jobDataMap.put("reminderId", reminder.getId());
 
-            // Create job
+            // 👇 Get FCM token from DeviceToken (if linked)
+            if (reminder.getDeviceToken() != null) {
+                jobDataMap.put("fcmToken", reminder.getDeviceToken().getFcmToken());
+            }
+
             JobDetail job = JobBuilder.newJob(ReminderJob.class)
                     .withIdentity("reminder-job-" + reminder.getId())
                     .usingJobData(jobDataMap)
                     .build();
 
-            // Convert remindAt (ZonedDateTime) to Date for Quartz
             Date fireTime = Date.from(
-                    reminder.getRemindAt()
-                            .withZoneSameInstant(ZoneOffset.UTC)
-                            .toInstant()
+                    reminder.getRemindAt().withZoneSameInstant(ZoneOffset.UTC).toInstant()
             );
 
-            // Create trigger
             Trigger trigger = TriggerBuilder.newTrigger()
                     .withIdentity("reminder-trigger-" + reminder.getId())
                     .startAt(fireTime)
                     .build();
 
-            // Schedule
             scheduler.scheduleJob(job, trigger);
-            System.out.println("✅ Scheduled reminder job for ID: " + reminder.getId() +
-                    " at " + reminder.getRemindAt());
+            System.out.println("✅ Scheduled job for reminder ID: " + reminder.getId());
 
         } catch (SchedulerException e) {
-            System.err.println("❌ Failed to schedule reminder job: " + e.getMessage());
             throw new RuntimeException("Scheduling failed for reminder ID: " + reminder.getId(), e);
         }
     }
