@@ -20,13 +20,6 @@ public class DeviceRegisterController {
         this.deviceTokenService = deviceTokenService;
     }
 
-    @GetMapping
-    public String getDeviceTokens() {
-
-        return "Hello World!";
-
-    }
-
     @PostMapping
     public DeviceToken registerDeviceToken(@Valid @RequestBody TokenRequestDTO request) {
 

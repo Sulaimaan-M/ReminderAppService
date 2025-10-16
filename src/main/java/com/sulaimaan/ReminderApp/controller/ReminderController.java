@@ -2,7 +2,6 @@
 package com.sulaimaan.ReminderApp.controller;
 
 import com.sulaimaan.ReminderApp.dto.ReminderDTO;
-import com.sulaimaan.ReminderApp.dto.TokenRequestDTO;
 import com.sulaimaan.ReminderApp.entity.Reminder;
 import com.sulaimaan.ReminderApp.service.ReminderService;
 import jakarta.validation.Valid;
@@ -24,13 +23,13 @@ public class ReminderController {
 
     // CREATE
     @PostMapping
-    public boolean newReminder(@Valid @RequestBody ReminderDTO reminderDTO) {
+    public Reminder newReminder(@Valid @RequestBody ReminderDTO reminderDTO) {
         return service.createReminder(reminderDTO);
     }
 
     // UPDATE (EDIT)
     @PutMapping("/{id}")
-    public boolean updateReminder(
+    public Reminder updateReminder(
             @PathVariable Long id,
             @Valid @RequestBody ReminderDTO reminderDTO) {
         return service.updateReminder(id, reminderDTO);
@@ -42,9 +41,8 @@ public class ReminderController {
         return service.deleteReminder(id);
     }
 
-    // GET ALL REMINDERS BY FCM TOKEN
-    @PostMapping("/by-token")
-    public List<Reminder> getRemindersByToken(@RequestBody TokenRequestDTO request) {
-        return service.getRemindersByToken(request.fcmToken);
+    @GetMapping("/{deviceTokenId}")
+    public List<Reminder> getRemindersByDeviceTokenId(@PathVariable Long deviceTokenId) {
+        return service.getRemindersByDeviceTokenId(deviceTokenId);
     }
 }
