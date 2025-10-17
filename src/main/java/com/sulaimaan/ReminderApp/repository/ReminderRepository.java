@@ -1,4 +1,3 @@
-// com.sulaimaan.ReminderApp.repository.ReminderRepository.java
 package com.sulaimaan.ReminderApp.repository;
 
 import com.sulaimaan.ReminderApp.entity.Reminder;

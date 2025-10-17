@@ -16,9 +16,10 @@ public class DeviceTokenService {
         this.deviceTokenRepo = deviceTokenRepo;
     }
 
+    // Saving the token in the Database.
     public DeviceToken registerDevice(String fcmToken) {
-        // Check if token already exists
-        DeviceToken existing = deviceTokenRepo.findByFcmToken(fcmToken); // ← RENAMED
+
+        DeviceToken existing = deviceTokenRepo.findByFcmToken(fcmToken);
         if (existing != null) {
             return existing;
         }
@@ -27,7 +28,6 @@ public class DeviceTokenService {
         return deviceTokenRepo.save(newToken);
     }
 
-    // In DeviceTokenService.java
     public DeviceToken getDeviceTokenById(Long id) {
         return deviceTokenRepo.findById(id).orElse(null);
     }

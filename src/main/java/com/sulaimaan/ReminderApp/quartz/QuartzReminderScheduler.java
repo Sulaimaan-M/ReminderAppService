@@ -1,4 +1,3 @@
-// com.sulaimaan.ReminderApp.quartz.QuartzReminderScheduler.java
 package com.sulaimaan.ReminderApp.quartz;
 
 import com.sulaimaan.ReminderApp.entity.Reminder;
@@ -25,7 +24,7 @@ public class QuartzReminderScheduler {
 
     public void schedule(Reminder reminder) {
         System.out.println("🔍 [QuartzScheduler] Starting schedule for reminder ID: " + reminder.getId());
-        if (reminder == null || reminder.getId() == null) {
+        if (reminder.getId() == null) {
             throw new IllegalArgumentException("Reminder must be persisted (have an ID) before scheduling");
         }
 

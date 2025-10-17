@@ -1,10 +1,7 @@
-// com.sulaimaan.ReminderApp.controller.DeviceRegisterController.java
 package com.sulaimaan.ReminderApp.controller;
 
-import com.sulaimaan.ReminderApp.dto.TokenRequestDTO;
 import com.sulaimaan.ReminderApp.entity.DeviceToken;
 import com.sulaimaan.ReminderApp.service.DeviceTokenService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +17,13 @@ public class DeviceRegisterController {
         this.deviceTokenService = deviceTokenService;
     }
 
+    // Gets invoked at the start-up of the Front-end,
+    // Is a necessary Data point to identify reminders and
+    // to send out Notifications
     @PostMapping
-    public DeviceToken registerDeviceToken(@Valid @RequestBody TokenRequestDTO request) {
+    public DeviceToken registerDeviceToken( @RequestBody String fcmToken) {
 
-        System.out.println("Registering device token : "+request.fcmToken);
-        return deviceTokenService.registerDevice(request.fcmToken);
+        System.out.println("📥 Registering device token : "+fcmToken);
+        return deviceTokenService.registerDevice(fcmToken);
     }
 }

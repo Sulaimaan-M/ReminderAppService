@@ -1,4 +1,3 @@
-// com.sulaimaan.ReminderApp.quartz.job.ReminderJob.java
 package com.sulaimaan.ReminderApp.quartz.job;
 
 import com.sulaimaan.ReminderApp.service.NotificationService;

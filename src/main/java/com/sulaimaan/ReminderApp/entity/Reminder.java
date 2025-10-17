@@ -28,12 +28,6 @@ public class Reminder {
     @ManyToOne
     @JoinColumn(name = "device_token_id")
     private DeviceToken deviceToken;
-    // Foreign key to DeviceToken
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "device_token_id", nullable = false)
-//    private DeviceToken deviceToken;
-
-    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -49,10 +43,6 @@ public class Reminder {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    public ZonedDateTime getCreatedAt() {
-        return createdAt;
     }
 
     public void setCreatedAt(ZonedDateTime createdAt) {

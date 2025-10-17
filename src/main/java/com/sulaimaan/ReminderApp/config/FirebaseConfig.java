@@ -11,7 +11,6 @@ import java.util.Objects;
 @Configuration
 public class FirebaseConfig {
 
-    // In your main Application class or a @Configuration class
     @PostConstruct
     public void initFirebase() {
         try {

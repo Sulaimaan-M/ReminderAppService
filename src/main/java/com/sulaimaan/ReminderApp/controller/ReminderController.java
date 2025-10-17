@@ -1,4 +1,3 @@
-// com.sulaimaan.ReminderApp.controller.ReminderController.java
 package com.sulaimaan.ReminderApp.controller;
 
 import com.sulaimaan.ReminderApp.dto.ReminderDTO;
