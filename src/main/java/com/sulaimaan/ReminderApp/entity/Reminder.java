@@ -1,75 +1,50 @@
 package com.sulaimaan.ReminderApp.entity;
 
-import com.sulaimaan.ReminderApp.helper.IntervalType;
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 
 @Entity
-@Table(name = "reminder")
 public class Reminder {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Column(nullable = false)
-    private String text;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "task_id", nullable = false)
+    private Task task;
 
-    private ZonedDateTime createdAt;
+    @Column(name = "reminded_at",  nullable = false)
+    private ZonedDateTime remindedAt;
 
-    @Column(nullable = false)
-    private ZonedDateTime remindAt;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private IntervalType intervalType;
-
-    @ManyToOne
-    @JoinColumn(name = "device_token_id")
-    private DeviceToken deviceToken;
+    @Column(name = "is_completed", nullable = false)
+    private Boolean isCompleted = false;
 
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public Task getTask() {
+        return task;
     }
 
-    public String getText() {
-        return text;
+    public void setTask(Task task) {
+        this.task = task;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public ZonedDateTime getRemindedAt() {
+        return remindedAt;
     }
 
-    public void setCreatedAt(ZonedDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setRemindedAt(ZonedDateTime remindedAt) {
+        this.remindedAt = remindedAt;
     }
 
-    public ZonedDateTime getRemindAt() {
-        return remindAt;
+    public Boolean getCompleted() {
+        return isCompleted;
     }
 
-    public void setRemindAt(ZonedDateTime remindAt) {
-        this.remindAt = remindAt;
-    }
-
-    public IntervalType getIntervalType() {
-        return intervalType;
-    }
-
-    public void setIntervalType(IntervalType intervalType) {
-        this.intervalType = intervalType;
-    }
-
-    public DeviceToken getDeviceToken() {
-        return deviceToken;
-    }
-
-    public void setDeviceToken(DeviceToken deviceToken) {
-        this.deviceToken = deviceToken;
+    public void setCompleted(Boolean completed) {
+        isCompleted = completed;
     }
 }
