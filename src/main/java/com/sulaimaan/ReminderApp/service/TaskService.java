@@ -29,25 +29,21 @@ public class TaskService {
         CronStringMapper cronMapper = new CronStringMapper();
         NextReminderCalculator reminderCalculator = new NextReminderCalculator();
 
-        // Fetch device token
         DeviceToken deviceToken = deviceTokenRepository.findById(request.deviceId)
                 .orElseThrow(() -> new InvalidInputException("Device not found with id: " + request.deviceId));
 
-        // Build cron expression
         String cronExpression = cronMapper.buildCronExpression(
                 request.timeDetail,
                 request.recurrencePattern,
                 request.recurrenceType
         );
 
-        // Calculate next reminder time (converts client timezone to UTC)
         ZonedDateTime nextReminder = reminderCalculator.calculateNextReminder(
                 request.timeDetail,
                 request.recurrencePattern,
                 request.recurrenceType
         );
 
-        // Create and save Task entity (all times in UTC)
         Task task = new Task(
                 request.taskText,
                 deviceToken,
@@ -64,31 +60,26 @@ public class TaskService {
         CronStringMapper cronMapper = new CronStringMapper();
         NextReminderCalculator reminderCalculator = new NextReminderCalculator();
 
-        // Find existing task
         Task existingTask = taskRepository.findById(taskId)
                 .orElseThrow(() -> new InvalidInputException("Task not found with id: " + taskId));
 
-        // Build new cron expression
         String cronExpression = cronMapper.buildCronExpression(
                 request.timeDetail,
                 request.recurrencePattern,
                 request.recurrenceType
         );
 
-        // Calculate new next reminder time (converts client timezone to UTC)
         ZonedDateTime nextReminder = reminderCalculator.calculateNextReminder(
                 request.timeDetail,
                 request.recurrencePattern,
                 request.recurrenceType
         );
 
-        // Update task fields
         existingTask.setTaskTxt(request.taskText);
         existingTask.setRecurrenceType(request.recurrenceType);
         existingTask.setCronExpression(cronExpression);
         existingTask.setNextReminderAt(nextReminder);
 
-        // Save and return updated task
         return taskRepository.save(existingTask);
     }
 }
