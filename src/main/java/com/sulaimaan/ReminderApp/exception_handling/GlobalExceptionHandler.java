@@ -1,6 +1,7 @@
 package com.sulaimaan.ReminderApp.exception_handling;
 
 import com.sulaimaan.ReminderApp.exception_handling.exception.InvalidInputException;
+import com.sulaimaan.ReminderApp.exception_handling.exception.SchedulingException;
 import com.sulaimaan.ReminderApp.exception_handling.dto.ExceptionResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,20 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SchedulingException.class)
+    public ResponseEntity<ExceptionResponse> handleSchedulingException(
+            SchedulingException ex, HttpServletRequest request) {
+
+        ExceptionResponse response = new ExceptionResponse(
+                ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "INTERNAL_SERVER_ERROR",
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

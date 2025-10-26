@@ -9,6 +9,7 @@ import com.sulaimaan.ReminderApp.helper.CronStringMapper;
 import com.sulaimaan.ReminderApp.helper.NextReminderCalculator;
 import com.sulaimaan.ReminderApp.repository.DeviceTokenRepository;
 import com.sulaimaan.ReminderApp.repository.TaskRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
@@ -19,12 +20,15 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final DeviceTokenRepository deviceTokenRepository;
+    private final SchedulingService schedulingService;
 
-    public TaskService(TaskRepository taskRepository, DeviceTokenRepository deviceTokenRepository) {
+    public TaskService(TaskRepository taskRepository, DeviceTokenRepository deviceTokenRepository, SchedulingService schedulingService) {
         this.taskRepository = taskRepository;
         this.deviceTokenRepository = deviceTokenRepository;
+        this.schedulingService = schedulingService;
     }
 
+    @Transactional
     public Task createTask(CreateTaskRequest request) {
         CronStringMapper cronMapper = new CronStringMapper();
         NextReminderCalculator reminderCalculator = new NextReminderCalculator();
@@ -53,9 +57,14 @@ public class TaskService {
                 nextReminder
         );
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        schedulingService.scheduleTask(savedTask);
+
+        return savedTask;
     }
 
+    @Transactional
     public Task updateTask(Long taskId, UpdateTaskRequest request) {
         CronStringMapper cronMapper = new CronStringMapper();
         NextReminderCalculator reminderCalculator = new NextReminderCalculator();
@@ -80,12 +89,19 @@ public class TaskService {
         existingTask.setCronExpression(cronExpression);
         existingTask.setNextReminderAt(nextReminder);
 
-        return taskRepository.save(existingTask);
+        Task updatedTask = taskRepository.save(existingTask);
+
+        schedulingService.rescheduleTask(updatedTask);
+
+        return updatedTask;
     }
 
+    @Transactional
     public Task deleteTask(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new InvalidInputException("Task not found with id: " + taskId));
+
+        schedulingService.unscheduleTask(taskId);
 
         taskRepository.delete(task);
 
