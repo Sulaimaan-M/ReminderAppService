@@ -24,7 +24,7 @@ public class DeviceTokenService {
             return existing;
         }
 
-        DeviceToken newToken = new DeviceToken(fcmToken); // ← Now uses FCM constructor
+        DeviceToken newToken = new DeviceToken(fcmToken);
         return deviceTokenRepo.save(newToken);
     }
 

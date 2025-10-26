@@ -5,6 +5,8 @@ import com.sulaimaan.ReminderApp.service.DeviceTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @CrossOrigin
 @RestController
 @RequestMapping("/register")
@@ -21,9 +23,9 @@ public class DeviceRegisterController {
     // Is a necessary Data point to identify reminders and
     // to send out Notifications
     @PostMapping
-    public DeviceToken registerDeviceToken( @RequestBody String fcmToken) {
+    public DeviceToken registerDeviceToken( @RequestBody Map<String, String> request) {
 
-        System.out.println("📥 Registering device token : "+fcmToken);
-        return deviceTokenService.registerDevice(fcmToken);
+        System.out.println("📥 Registering device token : "+request.get("fcmToken"));
+        return deviceTokenService.registerDevice(request.get("fcmToken"));
     }
 }
