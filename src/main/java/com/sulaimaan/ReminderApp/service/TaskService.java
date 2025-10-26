@@ -82,4 +82,13 @@ public class TaskService {
 
         return taskRepository.save(existingTask);
     }
+
+    public Task deleteTask(Long taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new InvalidInputException("Task not found with id: " + taskId));
+
+        taskRepository.delete(task);
+
+        return task;
+    }
 }
