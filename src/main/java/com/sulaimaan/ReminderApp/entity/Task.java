@@ -1,6 +1,6 @@
 package com.sulaimaan.ReminderApp.entity;
 
-import com.sulaimaan.ReminderApp.helper.IntervalType;
+import com.sulaimaan.ReminderApp.helper.RecurrenceType;
 import jakarta.persistence.*;
 import java.time.ZonedDateTime;
 
@@ -30,7 +30,21 @@ public class Task {
     private String cronExpression;
 
     @Column(name = "interval_type", nullable = false)
-    private IntervalType intervalType;
+    private RecurrenceType recurrenceType;
+
+    // Default constructor (required by JPA)
+    public Task() {}
+
+    // Constructor for creating new tasks
+    public Task(String taskTxt, DeviceToken deviceToken, RecurrenceType recurrenceType,
+                String cronExpression, ZonedDateTime createdAt, ZonedDateTime nextReminderAt) {
+        this.taskTxt = taskTxt;
+        this.deviceToken = deviceToken;
+        this.recurrenceType = recurrenceType;
+        this.cronExpression = cronExpression;
+        this.createdAt = createdAt;
+        this.nextReminderAt = nextReminderAt;
+    }
 
     public Long getId() {
         return id;
@@ -80,11 +94,11 @@ public class Task {
         this.cronExpression = cronExpression;
     }
 
-    public IntervalType getIntervalType() {
-        return intervalType;
+    public RecurrenceType getRecurrenceType() {
+        return recurrenceType;
     }
 
-    public void setIntervalType(IntervalType intervalType) {
-        this.intervalType = intervalType;
+    public void setRecurrenceType(RecurrenceType recurrenceType) {
+        this.recurrenceType = recurrenceType;
     }
 }
