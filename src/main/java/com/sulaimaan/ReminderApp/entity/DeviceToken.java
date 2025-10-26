@@ -9,6 +9,7 @@ public class DeviceToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "fcm_token", nullable = false, unique = true, length = 255)
@@ -35,9 +36,11 @@ public class DeviceToken {
         return fcmToken;
     }
 
-    // Setters
-    public void setId(Long id) {
-        this.id = id;
+    public ZonedDateTime getCreatedAt() {
+        return createdAt;
     }
 
+    public void setCreatedAt(ZonedDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
