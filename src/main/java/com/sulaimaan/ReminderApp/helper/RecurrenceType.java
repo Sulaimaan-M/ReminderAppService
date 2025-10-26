@@ -1,6 +1,6 @@
 package com.sulaimaan.ReminderApp.helper;
 
-public enum IntervalType {
+public enum RecurrenceType {
 
     SIMPLE,
     DAILY,
