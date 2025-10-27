@@ -4,6 +4,8 @@ import com.sulaimaan.ReminderApp.exception_handling.exception.InvalidInputExcept
 import com.sulaimaan.ReminderApp.exception_handling.exception.SchedulingException;
 import com.sulaimaan.ReminderApp.exception_handling.dto.ExceptionResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,9 +17,13 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(InvalidInputException.class)
     public ResponseEntity<ExceptionResponse> handleInvalidInputException(
             InvalidInputException ex, HttpServletRequest request) {
+
+        logger.warn("InvalidInputException | path={} | msg={}", request.getRequestURI(), ex.getMessage());
 
         ExceptionResponse response = new ExceptionResponse(
                 ex.getMessage(),
@@ -32,6 +38,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SchedulingException.class)
     public ResponseEntity<ExceptionResponse> handleSchedulingException(
             SchedulingException ex, HttpServletRequest request) {
+
+        logger.error("SchedulingException | path={} | msg={}", request.getRequestURI(), ex.getMessage(), ex);
 
         ExceptionResponse response = new ExceptionResponse(
                 ex.getMessage(),
@@ -53,6 +61,8 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
 
+        logger.warn("ValidationError | path={} | {}", request.getRequestURI(), errorMessage);
+
         ExceptionResponse response = new ExceptionResponse(
                 "Validation failed: " + errorMessage,
                 HttpStatus.BAD_REQUEST.value(),
@@ -66,6 +76,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
+
+        logger.error("UnhandledException | path={} | msg={}", request.getRequestURI(), ex.getMessage(), ex);
 
         ExceptionResponse response = new ExceptionResponse(
                 "An unexpected error occurred: " + ex.getMessage(),

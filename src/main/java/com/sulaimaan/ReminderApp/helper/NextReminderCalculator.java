@@ -3,25 +3,31 @@ package com.sulaimaan.ReminderApp.helper;
 import com.sulaimaan.ReminderApp.dto.incoming.minor.RecurrencePattern;
 import com.sulaimaan.ReminderApp.dto.incoming.minor.TimeDetail;
 import com.sulaimaan.ReminderApp.exception_handling.exception.InvalidInputException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 public class NextReminderCalculator {
 
+    private static final Logger logger = LoggerFactory.getLogger(NextReminderCalculator.class);
+
     public ZonedDateTime calculateNextReminder(TimeDetail timeDetail, RecurrencePattern pattern, RecurrenceType recurrenceType) {
         ZoneId clientZone;
         try {
             clientZone = ZoneId.of(timeDetail.timezone);
         } catch (Exception e) {
+            logger.warn("NextReminderCalculator | invalid timezone={} fallback=UTC", timeDetail.timezone);
             throw new InvalidInputException("Invalid timezone: " + timeDetail.timezone);
         }
 
-        ZonedDateTime nowInClientZone = ZonedDateTime.now(clientZone);
+        ZonedDateTime now = ZonedDateTime.now(clientZone);
+        logger.info("NextReminderCalculator | type={} now={} tz={}", recurrenceType, now, clientZone);
 
         switch (recurrenceType) {
-            case SIMPLE -> {
-                ZonedDateTime exactDateTimeInClientZone = ZonedDateTime.now(clientZone)
+            case SIMPLE: {
+                ZonedDateTime exact = ZonedDateTime.now(clientZone)
                         .withYear(Integer.parseInt(pattern.year))
                         .withMonth(Integer.parseInt(pattern.month))
                         .withDayOfMonth(Integer.parseInt(pattern.dayOfMonth))
@@ -29,96 +35,88 @@ public class NextReminderCalculator {
                         .withMinute(timeDetail.minutes)
                         .withSecond(timeDetail.seconds)
                         .withNano(0);
-
-                if (exactDateTimeInClientZone.isBefore(nowInClientZone)) {
+                if (exact.isBefore(now)) {
+                    logger.warn("NextReminderCalculator | SIMPLE past exact={}", exact);
                     throw new InvalidInputException("The specified reminder time is in the past");
                 }
-
-                return exactDateTimeInClientZone;
+                logger.info("NextReminderCalculator | SIMPLE next={}", exact);
+                return exact;
             }
-
-            case DAILY -> {
-                ZonedDateTime todayAtTimeInClientZone = nowInClientZone
-                        .withHour(timeDetail.hours)
-                        .withMinute(timeDetail.minutes)
-                        .withSecond(timeDetail.seconds)
-                        .withNano(0);
-
-                if (todayAtTimeInClientZone.isBefore(nowInClientZone) || todayAtTimeInClientZone.isEqual(nowInClientZone)) {
-                    return todayAtTimeInClientZone.plusDays(1);
-                }
-
-                return todayAtTimeInClientZone;
+            case DAILY: {
+                ZonedDateTime today = now.withHour(timeDetail.hours).withMinute(timeDetail.minutes).withSecond(timeDetail.seconds).withNano(0);
+                ZonedDateTime next = (today.isBefore(now) || today.isEqual(now)) ? today.plusDays(1) : today;
+                logger.info("NextReminderCalculator | DAILY next={}", next);
+                return next;
             }
-
-            case WEEKLY -> {
-                int targetDayOfWeek = parseDayOfWeek(pattern.dayOfWeek);
-                int currentDayOfWeek = nowInClientZone.getDayOfWeek().getValue();
-
-                ZonedDateTime thisWeekTargetInClientZone = nowInClientZone
-                        .plusDays(targetDayOfWeek - currentDayOfWeek)
-                        .withHour(timeDetail.hours)
-                        .withMinute(timeDetail.minutes)
-                        .withSecond(timeDetail.seconds)
-                        .withNano(0);
-
-                if (thisWeekTargetInClientZone.isBefore(nowInClientZone) || thisWeekTargetInClientZone.isEqual(nowInClientZone)) {
-                    return thisWeekTargetInClientZone.plusWeeks(1);
-                }
-
-                return thisWeekTargetInClientZone;
+            case WEEKLY: {
+                int targetDow = parseDayOfWeek(pattern.dayOfWeek);
+                int currentDow = now.getDayOfWeek().getValue();
+                ZonedDateTime target = now.plusDays(targetDow - currentDow)
+                        .withHour(timeDetail.hours).withMinute(timeDetail.minutes).withSecond(timeDetail.seconds).withNano(0);
+                if (!target.isAfter(now)) target = target.plusWeeks(1);
+                logger.info("NextReminderCalculator | WEEKLY next={}", target);
+                return target;
             }
-
-            case MONTHLY -> {
+            case MONTHLY: {
                 int targetDay = Integer.parseInt(pattern.dayOfMonth);
-
-                ZonedDateTime thisMonthTargetInClientZone = nowInClientZone
-                        .withDayOfMonth(targetDay)
-                        .withHour(timeDetail.hours)
-                        .withMinute(timeDetail.minutes)
-                        .withSecond(timeDetail.seconds)
-                        .withNano(0);
-
-                if (thisMonthTargetInClientZone.isBefore(nowInClientZone) || thisMonthTargetInClientZone.isEqual(nowInClientZone)) {
-                    return thisMonthTargetInClientZone.plusMonths(1);
-                }
-
-                return thisMonthTargetInClientZone;
+                ZonedDateTime target = now.withDayOfMonth(Math.min(targetDay, now.toLocalDate().lengthOfMonth()))
+                        .withHour(timeDetail.hours).withMinute(timeDetail.minutes).withSecond(timeDetail.seconds).withNano(0);
+                if (!target.isAfter(now)) target = target.plusMonths(1).withDayOfMonth(Math.min(targetDay, target.toLocalDate().lengthOfMonth()));
+                logger.info("NextReminderCalculator | MONTHLY next={}", target);
+                return target;
             }
-
-            case YEARLY -> {
+            case YEARLY: {
                 int targetMonth = Integer.parseInt(pattern.month);
                 int targetDay = Integer.parseInt(pattern.dayOfMonth);
-
-                ZonedDateTime thisYearTargetInClientZone = nowInClientZone
-                        .withMonth(targetMonth)
-                        .withDayOfMonth(targetDay)
-                        .withHour(timeDetail.hours)
-                        .withMinute(timeDetail.minutes)
-                        .withSecond(timeDetail.seconds)
-                        .withNano(0);
-
-                if (thisYearTargetInClientZone.isBefore(nowInClientZone) || thisYearTargetInClientZone.isEqual(nowInClientZone)) {
-                    return thisYearTargetInClientZone.plusYears(1);
+                ZonedDateTime target = now.withMonth(targetMonth)
+                        .withDayOfMonth(Math.min(targetDay, now.withMonth(targetMonth).toLocalDate().lengthOfMonth()))
+                        .withHour(timeDetail.hours).withMinute(timeDetail.minutes).withSecond(timeDetail.seconds).withNano(0);
+                if (!target.isAfter(now)) {
+                    ZonedDateTime nextYear = now.plusYears(1).withMonth(targetMonth);
+                    target = nextYear.withDayOfMonth(Math.min(targetDay, nextYear.toLocalDate().lengthOfMonth()))
+                            .withHour(timeDetail.hours).withMinute(timeDetail.minutes).withSecond(timeDetail.seconds).withNano(0);
                 }
-
-                return thisYearTargetInClientZone;
+                logger.info("NextReminderCalculator | YEARLY next={}", target);
+                return target;
             }
-
-            default -> throw new InvalidInputException("Invalid recurrence type: " + recurrenceType);
+            default:
+                logger.warn("NextReminderCalculator | invalid type={}", recurrenceType);
+                throw new InvalidInputException("Invalid recurrence type: " + recurrenceType);
         }
     }
 
     private int parseDayOfWeek(String dayOfWeek) {
-        return switch (dayOfWeek.toUpperCase()) {
-            case "MON", "MONDAY", "1" -> 1;
-            case "TUE", "TUESDAY", "2" -> 2;
-            case "WED", "WEDNESDAY", "3" -> 3;
-            case "THU", "THURSDAY", "4" -> 4;
-            case "FRI", "FRIDAY", "5" -> 5;
-            case "SAT", "SATURDAY", "6" -> 6;
-            case "SUN", "SUNDAY", "7" -> 7;
-            default -> throw new InvalidInputException("Invalid day of week: " + dayOfWeek);
-        };
+        switch (dayOfWeek.toUpperCase()) {
+            case "MON":
+            case "MONDAY":
+            case "1":
+                return 1;
+            case "TUE":
+            case "TUESDAY":
+            case "2":
+                return 2;
+            case "WED":
+            case "WEDNESDAY":
+            case "3":
+                return 3;
+            case "THU":
+            case "THURSDAY":
+            case "4":
+                return 4;
+            case "FRI":
+            case "FRIDAY":
+            case "5":
+                return 5;
+            case "SAT":
+            case "SATURDAY":
+            case "6":
+                return 6;
+            case "SUN":
+            case "SUNDAY":
+            case "7":
+                return 7;
+            default:
+                throw new InvalidInputException("Invalid day of week: " + dayOfWeek);
+        }
     }
 }

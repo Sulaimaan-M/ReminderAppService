@@ -5,6 +5,8 @@ import com.sulaimaan.ReminderApp.exception_handling.exception.SchedulingExceptio
 import com.sulaimaan.ReminderApp.helper.RecurrenceType;
 import com.sulaimaan.ReminderApp.quartz.ReminderNotificationJob;
 import org.quartz.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -13,18 +15,17 @@ import java.util.TimeZone;
 @Service
 public class SchedulingService {
 
+    private static final Logger logger = LoggerFactory.getLogger(SchedulingService.class);
+
     private final Scheduler scheduler;
 
     public SchedulingService(Scheduler scheduler) {
         this.scheduler = scheduler;
-        System.out.println("✅ SchedulingService initialized with Scheduler: " + scheduler);
     }
 
     public void scheduleTask(Task task) {
-        System.out.println("🔧 Attempting to schedule task: " + task.getId());
-        System.out.println("📋 Task type: " + task.getRecurrenceType());
-        System.out.println("⏰ Next reminder at: " + task.getNextReminderAt());
-        System.out.println("🕐 Cron expression: " + task.getCronExpression());
+        logger.info("SchedulingService.scheduleTask | id={} type={} nextAt={} cron={}",
+                task.getId(), task.getRecurrenceType(), task.getNextReminderAt(), task.getCronExpression());
 
         try {
             JobDataMap jobDataMap = new JobDataMap();
@@ -42,75 +43,54 @@ public class SchedulingService {
 
             if (task.getRecurrenceType() == RecurrenceType.SIMPLE) {
                 Date fireTime = Date.from(task.getNextReminderAt().toInstant());
-
                 trigger = TriggerBuilder.newTrigger()
                         .withIdentity("trigger-" + task.getId(), "reminder-triggers")
                         .startAt(fireTime)
                         .build();
-
-                System.out.println("📅 Using SimpleTrigger for SIMPLE task");
-                System.out.println("🎯 Fire time: " + fireTime);
+                logger.info("SchedulingService.scheduleTask | SimpleTrigger at {}", fireTime);
             } else {
                 CronScheduleBuilder cronSchedule = CronScheduleBuilder
                         .cronSchedule(task.getCronExpression())
-                        .inTimeZone(TimeZone.getTimeZone("UTC"));
-
+                        .inTimeZone(TimeZone.getTimeZone("UTC")); // enforce UTC
                 trigger = TriggerBuilder.newTrigger()
                         .withIdentity("trigger-" + task.getId(), "reminder-triggers")
                         .withSchedule(cronSchedule)
                         .build();
-
-                System.out.println("⏰ Using CronTrigger with expression: " + task.getCronExpression());
-                System.out.println("🌍 Timezone: UTC");
+                logger.info("SchedulingService.scheduleTask | CronTrigger UTC");
             }
 
             scheduler.scheduleJob(jobDetail, trigger);
-
-            System.out.println("✅ Successfully scheduled task " + task.getId());
+            logger.info("SchedulingService.scheduleTask | scheduled id={}", task.getId());
 
         } catch (SchedulerException e) {
-            System.err.println("❌ Failed to schedule task " + task.getId() + ": " + e.getMessage());
-            e.printStackTrace();
+            logger.error("SchedulingService.scheduleTask | failed id={} error={}", task.getId(), e.getMessage(), e);
             throw new SchedulingException("Failed to schedule task: " + task.getId(), e);
         } catch (Exception e) {
-            System.err.println("❌ Unexpected error scheduling task " + task.getId() + ": " + e.getMessage());
-            e.printStackTrace();
+            logger.error("SchedulingService.scheduleTask | unexpected id={} error={}", task.getId(), e.getMessage(), e);
             throw new SchedulingException("Unexpected error scheduling task: " + task.getId(), e);
         }
     }
 
     public void rescheduleTask(Task task) {
-        System.out.println("🔧 Attempting to reschedule task: " + task.getId());
-
+        logger.info("SchedulingService.rescheduleTask | id={}", task.getId());
         try {
             unscheduleTask(task.getId());
             scheduleTask(task);
-
-            System.out.println("✅ Successfully rescheduled task " + task.getId());
-
+            logger.info("SchedulingService.rescheduleTask | done id={}", task.getId());
         } catch (Exception e) {
-            System.err.println("❌ Failed to reschedule task " + task.getId() + ": " + e.getMessage());
-            e.printStackTrace();
+            logger.error("SchedulingService.rescheduleTask | failed id={} error={}", task.getId(), e.getMessage(), e);
             throw new SchedulingException("Failed to reschedule task: " + task.getId(), e);
         }
     }
 
     public void unscheduleTask(Long taskId) {
-        System.out.println("🔧 Attempting to unschedule task: " + taskId);
-
+        logger.info("SchedulingService.unscheduleTask | id={}", taskId);
         try {
             JobKey jobKey = new JobKey("task-" + taskId, "reminder-jobs");
             boolean deleted = scheduler.deleteJob(jobKey);
-
-            if (deleted) {
-                System.out.println("✅ Successfully unscheduled task " + taskId);
-            } else {
-                System.out.println("⚠️ Task " + taskId + " was not scheduled (or already removed)");
-            }
-
+            logger.info("SchedulingService.unscheduleTask | id={} deleted={}", taskId, deleted);
         } catch (SchedulerException e) {
-            System.err.println("❌ Failed to unschedule task " + taskId + ": " + e.getMessage());
-            e.printStackTrace();
+            logger.error("SchedulingService.unscheduleTask | failed id={} error={}", taskId, e.getMessage(), e);
             throw new SchedulingException("Failed to unschedule task: " + taskId, e);
         }
     }

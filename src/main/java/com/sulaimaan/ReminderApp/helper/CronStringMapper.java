@@ -2,17 +2,24 @@ package com.sulaimaan.ReminderApp.helper;
 
 import com.sulaimaan.ReminderApp.dto.incoming.minor.RecurrencePattern;
 import com.sulaimaan.ReminderApp.dto.incoming.minor.TimeDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CronStringMapper {
 
+    private static final Logger logger = LoggerFactory.getLogger(CronStringMapper.class);
+
     public String buildCronExpression(TimeDetail timeDetail, RecurrencePattern recurrencePattern, RecurrenceType recurrenceType) {
+        logger.info("CronStringMapper.buildCronExpression | type={} tz={}", recurrenceType, timeDetail.timezone);
+
         TimeConverter converter = new TimeConverter();
         TimeConverter.UtcTime utcTime = converter.convertToUtc(timeDetail);
-
         String timePart = mapTime(utcTime);
         String datePart = mapDatePattern(recurrenceType, recurrencePattern);
+        String cron = timePart + " " + datePart;
 
-        return timePart + " " + datePart;
+        logger.info("CronStringMapper.buildCronExpression | cron={}", cron);
+        return cron;
     }
 
     private String mapTime(TimeConverter.UtcTime utcTime) {
@@ -20,26 +27,19 @@ public class CronStringMapper {
     }
 
     private String mapDatePattern(RecurrenceType recurrenceType, RecurrencePattern pattern) {
-        String cronExpression = "";
-
         switch (recurrenceType) {
-            case SIMPLE -> {
-                cronExpression = pattern.dayOfMonth + " " + pattern.month + " " + pattern.dayOfWeek + " " + pattern.year;
-            }
-            case DAILY -> {
-                cronExpression = "* * ? *";
-            }
-            case WEEKLY -> {
-                cronExpression = "? * " + pattern.dayOfWeek + " *";
-            }
-            case MONTHLY -> {
-                cronExpression = pattern.dayOfMonth + " * ? *";
-            }
-            case YEARLY -> {
-                cronExpression = pattern.dayOfMonth + " " + pattern.month + " ? *";
-            }
+            case SIMPLE:
+                return pattern.dayOfMonth + " " + pattern.month + " " + pattern.dayOfWeek + " " + pattern.year;
+            case DAILY:
+                return "* * ? *";
+            case WEEKLY:
+                return "? * " + pattern.dayOfWeek + " *";
+            case MONTHLY:
+                return pattern.dayOfMonth + " * ? *";
+            case YEARLY:
+                return pattern.dayOfMonth + " " + pattern.month + " ? *";
+            default:
+                return "* * ? *";
         }
-
-        return cronExpression;
     }
 }

@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface ReminderRepository extends JpaRepository<Reminder, Long> {
 
-
     @Query("""
            SELECT r
            FROM Reminder r
