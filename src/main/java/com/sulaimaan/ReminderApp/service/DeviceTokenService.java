@@ -20,22 +20,21 @@ public class DeviceTokenService {
     }
 
     public DeviceToken registerDevice(String fcmToken) {
-        logger.info("DeviceTokenService.registerDevice | tokenLen={}", fcmToken == null ? 0 : fcmToken.length());
-
+        logger.info("🔵 DeviceTokenService.registerDevice | tokenLen={}", fcmToken == null ? 0 : fcmToken.length());
         DeviceToken existing = deviceTokenRepo.findByFcmToken(fcmToken);
         if (existing != null) {
-            logger.info("DeviceTokenService.registerDevice | exists id={}", existing.getId());
+            logger.info("🔵 DeviceTokenService.registerDevice | Found existing, id={}", existing.getId());
             return existing;
         }
 
         DeviceToken newToken = new DeviceToken(fcmToken);
         DeviceToken saved = deviceTokenRepo.save(newToken);
-        logger.info("DeviceTokenService.registerDevice | saved id={}", saved.getId());
+        logger.info("🔵 DeviceTokenService.registerDevice | Saved new, id={}", saved.getId());
         return saved;
     }
 
     public DeviceToken getDeviceTokenById(Long id) {
-        logger.info("DeviceTokenService.getDeviceTokenById | id={}", id);
+        logger.info("🔵 DeviceTokenService.getDeviceTokenById | id={}", id);
         return deviceTokenRepo.findById(id).orElse(null);
     }
 }

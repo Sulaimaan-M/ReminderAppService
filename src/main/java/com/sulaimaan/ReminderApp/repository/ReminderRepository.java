@@ -24,4 +24,11 @@ public interface ReminderRepository extends JpaRepository<Reminder, Long> {
            ORDER BY r.remindedAt DESC
            """)
     List<Reminder> findLatestIncompleteByDevice(@Param("deviceId") Long deviceId);
+
+    // New: all reminders for a task ordered by most recent first
+    List<Reminder> findByTaskIdOrderByRemindedAtDesc(Long taskId);
+
+    // New: filtered by completion status
+    List<Reminder> findByTaskIdAndIsCompletedOrderByRemindedAtDesc(Long taskId, Boolean isCompleted);
+
 }

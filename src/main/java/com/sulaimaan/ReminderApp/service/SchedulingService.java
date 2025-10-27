@@ -24,7 +24,7 @@ public class SchedulingService {
     }
 
     public void scheduleTask(Task task) {
-        logger.info("SchedulingService.scheduleTask | id={} type={} nextAt={} cron={}",
+        logger.info("🗓️ SchedulingService.scheduleTask | taskId={} type={} nextAt={} cron='{}'",
                 task.getId(), task.getRecurrenceType(), task.getNextReminderAt(), task.getCronExpression());
 
         try {
@@ -40,57 +40,56 @@ public class SchedulingService {
                     .build();
 
             Trigger trigger;
-
             if (task.getRecurrenceType() == RecurrenceType.SIMPLE) {
                 Date fireTime = Date.from(task.getNextReminderAt().toInstant());
                 trigger = TriggerBuilder.newTrigger()
                         .withIdentity("trigger-" + task.getId(), "reminder-triggers")
                         .startAt(fireTime)
                         .build();
-                logger.info("SchedulingService.scheduleTask | SimpleTrigger at {}", fireTime);
+                logger.info("🗓️ SchedulingService.scheduleTask | Using SimpleTrigger at {}", fireTime);
             } else {
                 CronScheduleBuilder cronSchedule = CronScheduleBuilder
                         .cronSchedule(task.getCronExpression())
-                        .inTimeZone(TimeZone.getTimeZone("UTC")); // enforce UTC
+                        .inTimeZone(TimeZone.getTimeZone("UTC"));
                 trigger = TriggerBuilder.newTrigger()
                         .withIdentity("trigger-" + task.getId(), "reminder-triggers")
                         .withSchedule(cronSchedule)
                         .build();
-                logger.info("SchedulingService.scheduleTask | CronTrigger UTC");
+                logger.info("🗓️ SchedulingService.scheduleTask | Using CronTrigger (UTC)");
             }
 
             scheduler.scheduleJob(jobDetail, trigger);
-            logger.info("SchedulingService.scheduleTask | scheduled id={}", task.getId());
-
-        } catch (SchedulerException e) {
-            logger.error("SchedulingService.scheduleTask | failed id={} error={}", task.getId(), e.getMessage(), e);
-            throw new SchedulingException("Failed to schedule task: " + task.getId(), e);
+            logger.info("✅ SchedulingService.scheduleTask | Job scheduled successfully | taskId={}", task.getId());
         } catch (Exception e) {
-            logger.error("SchedulingService.scheduleTask | unexpected id={} error={}", task.getId(), e.getMessage(), e);
-            throw new SchedulingException("Unexpected error scheduling task: " + task.getId(), e);
+            logger.error("❌ SchedulingService.scheduleTask | Scheduling failed | taskId={}", task.getId(), e);
+            throw new SchedulingException("Failed to schedule task: " + task.getId(), e);
         }
     }
 
     public void rescheduleTask(Task task) {
-        logger.info("SchedulingService.rescheduleTask | id={}", task.getId());
+        logger.info("🔄 SchedulingService.rescheduleTask | taskId={}", task.getId());
         try {
             unscheduleTask(task.getId());
             scheduleTask(task);
-            logger.info("SchedulingService.rescheduleTask | done id={}", task.getId());
+            logger.info("✅ SchedulingService.rescheduleTask | Reschedule successful | taskId={}", task.getId());
         } catch (Exception e) {
-            logger.error("SchedulingService.rescheduleTask | failed id={} error={}", task.getId(), e.getMessage(), e);
+            logger.error("❌ SchedulingService.rescheduleTask | Reschedule failed | taskId={}", task.getId(), e);
             throw new SchedulingException("Failed to reschedule task: " + task.getId(), e);
         }
     }
 
     public void unscheduleTask(Long taskId) {
-        logger.info("SchedulingService.unscheduleTask | id={}", taskId);
+        logger.info("🗑️ SchedulingService.unscheduleTask | taskId={}", taskId);
         try {
             JobKey jobKey = new JobKey("task-" + taskId, "reminder-jobs");
             boolean deleted = scheduler.deleteJob(jobKey);
-            logger.info("SchedulingService.unscheduleTask | id={} deleted={}", taskId, deleted);
+            if (deleted) {
+                logger.info("✅ SchedulingService.unscheduleTask | Job unscheduled successfully | taskId={}", taskId);
+            } else {
+                logger.warn("⚠️ SchedulingService.unscheduleTask | Job was not found to unschedule | taskId={}", taskId);
+            }
         } catch (SchedulerException e) {
-            logger.error("SchedulingService.unscheduleTask | failed id={} error={}", taskId, e.getMessage(), e);
+            logger.error("❌ SchedulingService.unscheduleTask | Unschedule failed | taskId={}", taskId, e);
             throw new SchedulingException("Failed to unschedule task: " + taskId, e);
         }
     }

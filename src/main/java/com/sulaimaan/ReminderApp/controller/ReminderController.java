@@ -23,9 +23,9 @@ public class ReminderController {
 
     @GetMapping("/device/{deviceId}/pending")
     public List<PendingReminderResponse> getLatestIncompleteByDevice(@PathVariable Long deviceId) {
-        logger.info("GET /reminder/device/{}/pending", deviceId);
+        logger.info("📋 GET /reminder/device/{}/pending", deviceId);
         List<PendingReminderResponse> res = reminderService.getLatestIncompleteByDevice(deviceId);
-        logger.info("GET /reminder/device/{}/pending | returning {}", deviceId, res.size());
+        logger.info("✅ GET /reminder/device/{}/pending | Returning {} reminders", deviceId, res.size());
         return res;
     }
 }

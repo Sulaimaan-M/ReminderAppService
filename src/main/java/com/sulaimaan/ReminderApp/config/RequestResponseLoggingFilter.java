@@ -29,14 +29,14 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         String query = request.getQueryString();
         String fullPath = (query == null) ? uri : uri + "?" + query;
 
-        logger.info("➡️  Incoming request: {} {}", method, fullPath);
+        logger.info("➡️  {} {}", method, fullPath);
 
         try {
             filterChain.doFilter(request, response);
         } finally {
             long duration = System.currentTimeMillis() - start;
             int status = response.getStatus();
-            logger.info("⬅️  Response: {} {} -> status={} ({} ms)", method, fullPath, status, duration);
+            logger.info("⬅️  {} {} -> {} ({} ms)", method, fullPath, status, duration);
         }
     }
 }

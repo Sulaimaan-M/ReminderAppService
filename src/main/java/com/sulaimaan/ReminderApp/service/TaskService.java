@@ -35,70 +35,48 @@ public class TaskService {
     }
 
     public Task createTask(CreateTaskRequest request) {
-        CronStringMapper cronMapper = new CronStringMapper();
-        NextReminderCalculator reminderCalculator = new NextReminderCalculator();
-
-        logger.info("TaskService.createTask | deviceId={} type={}", request.deviceId, request.recurrenceType);
-
+        logger.info("🟢 TaskService.createTask | 1/6: Start | deviceId={}", request.deviceId);
         DeviceToken deviceToken = deviceTokenRepository.findById(request.deviceId)
                 .orElseThrow(() -> {
-                    logger.warn("TaskService.createTask | device not found id={}", request.deviceId);
+                    logger.warn("🔴 TaskService.createTask | 2/6: Fail - Device not found | id={}", request.deviceId);
                     return new InvalidInputException("Device not found with id: " + request.deviceId);
                 });
+        logger.info("🟢 TaskService.createTask | 2/6: Found device token | id={}", deviceToken.getId());
 
-        String cronExpression = cronMapper.buildCronExpression(
-                request.timeDetail,
-                request.recurrencePattern,
-                request.recurrenceType
+        String cronExpression = new CronStringMapper().buildCronExpression(
+                request.timeDetail, request.recurrencePattern, request.recurrenceType
         );
-        logger.info("TaskService.createTask | cron={}", cronExpression);
+        logger.info("🟢 TaskService.createTask | 3/6: Built cron expression | cron='{}'", cronExpression);
 
-        ZonedDateTime nextReminder = reminderCalculator.calculateNextReminder(
-                request.timeDetail,
-                request.recurrencePattern,
-                request.recurrenceType
+        ZonedDateTime nextReminder = new NextReminderCalculator().calculateNextReminder(
+                request.timeDetail, request.recurrencePattern, request.recurrenceType
         );
-        logger.info("TaskService.createTask | nextReminderAt={}", nextReminder);
+        logger.info("🟢 TaskService.createTask | 4/6: Calculated next reminder time | nextReminderAt={}", nextReminder);
 
-        Task task = new Task(
-                request.taskText,
-                deviceToken,
-                request.recurrenceType,
-                cronExpression,
-                ZonedDateTime.now(ZoneOffset.UTC),
-                nextReminder
-        );
-
+        Task task = new Task(request.taskText, deviceToken, request.recurrenceType, cronExpression,
+                ZonedDateTime.now(ZoneOffset.UTC), nextReminder);
         Task savedTask = taskRepository.save(task);
-        logger.info("TaskService.createTask | saved id={}", savedTask.getId());
+        logger.info("🟢 TaskService.createTask | 5/6: Saved task to DB | id={}", savedTask.getId());
 
         schedulingService.scheduleTask(savedTask);
-        logger.info("TaskService.createTask | scheduled id={}", savedTask.getId());
-
+        logger.info("🟢 TaskService.createTask | 6/6: Done - Scheduled task | id={}", savedTask.getId());
         return savedTask;
     }
 
     public Task updateTask(Long taskId, UpdateTaskRequest request) {
-        CronStringMapper cronMapper = new CronStringMapper();
-        NextReminderCalculator reminderCalculator = new NextReminderCalculator();
-
-        logger.info("TaskService.updateTask | id={} type={}", taskId, request.recurrenceType);
-
+        logger.info("🔵 TaskService.updateTask | 1/5: Start | taskId={}", taskId);
         Task existingTask = taskRepository.findById(taskId)
                 .orElseThrow(() -> {
-                    logger.warn("TaskService.updateTask | not found id={}", taskId);
+                    logger.warn("🔴 TaskService.updateTask | 2/5: Fail - Task not found | id={}", taskId);
                     return new InvalidInputException("Task not found with id: " + taskId);
                 });
+        logger.info("🔵 TaskService.updateTask | 2/5: Found task");
 
-        String cronExpression = cronMapper.buildCronExpression(
-                request.timeDetail,
-                request.recurrencePattern,
-                request.recurrenceType
+        String cronExpression = new CronStringMapper().buildCronExpression(
+                request.timeDetail, request.recurrencePattern, request.recurrenceType
         );
-        ZonedDateTime nextReminder = reminderCalculator.calculateNextReminder(
-                request.timeDetail,
-                request.recurrencePattern,
-                request.recurrenceType
+        ZonedDateTime nextReminder = new NextReminderCalculator().calculateNextReminder(
+                request.timeDetail, request.recurrencePattern, request.recurrenceType
         );
 
         existingTask.setTaskTxt(request.taskText);
@@ -107,32 +85,34 @@ public class TaskService {
         existingTask.setNextReminderAt(nextReminder);
 
         Task updatedTask = taskRepository.save(existingTask);
-        logger.info("TaskService.updateTask | updated id={}", updatedTask.getId());
+        logger.info("🔵 TaskService.updateTask | 3/5: Updated task in DB | id={}", updatedTask.getId());
 
         schedulingService.rescheduleTask(updatedTask);
-        logger.info("TaskService.updateTask | rescheduled id={}", updatedTask.getId());
+        logger.info("🔵 TaskService.updateTask | 4/5: Rescheduled task");
 
+        logger.info("🔵 TaskService.updateTask | 5/5: Done");
         return updatedTask;
     }
 
-    public Task deleteTask(Long taskId) {
-        logger.info("TaskService.deleteTask | id={}", taskId);
+    public void deleteTask(Long taskId) {
+        logger.info("🟡 TaskService.deleteTask | 1/3: Start | taskId={}", taskId);
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> {
-                    logger.warn("TaskService.deleteTask | not found id={}", taskId);
+                    logger.warn("🔴 TaskService.deleteTask | 2/3: Fail - Task not found | id={}", taskId);
                     return new InvalidInputException("Task not found with id: " + taskId);
                 });
 
         schedulingService.unscheduleTask(taskId);
+        logger.info("🟡 TaskService.deleteTask | 2/3: Unscheduled task");
+
         taskRepository.delete(task);
-        logger.info("TaskService.deleteTask | deleted id={}", taskId);
-        return task;
+        logger.info("🟡 TaskService.deleteTask | 3/3: Done - Deleted task from DB");
     }
 
     public List<Task> getTasksByDevice(Long deviceId) {
-        logger.info("TaskService.getTasksByDevice | deviceId={}", deviceId);
+        logger.info("🔵 TaskService.getTasksByDevice | deviceId={}", deviceId);
         List<Task> tasks = taskRepository.findNonSimpleTasksByDeviceId(deviceId);
-        logger.info("TaskService.getTasksByDevice | deviceId={} count={}", deviceId, tasks.size());
+        logger.info("🔵 TaskService.getTasksByDevice | deviceId={} found {} tasks", deviceId, tasks.size());
         return tasks;
     }
 }

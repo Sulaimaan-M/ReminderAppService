@@ -26,9 +26,9 @@ public class DeviceRegisterController {
     @PostMapping
     public DeviceToken registerDeviceToken(@RequestBody Map<String, String> request) {
         String token = request.get("fcmToken");
-        logger.info("POST /register | tokenLen={}", token == null ? 0 : token.length());
+        logger.info("📱 POST /register | tokenLen={}", token == null ? 0 : token.length());
         DeviceToken saved = deviceTokenService.registerDevice(token);
-        logger.info("POST /register | registered id={}", saved.getId());
+        logger.info("✅ POST /register | Returned id={}", saved.getId());
         return saved;
     }
 }

@@ -22,9 +22,9 @@ public class ReminderService {
     }
 
     public List<PendingReminderResponse> getLatestIncompleteByDevice(Long deviceId) {
-        logger.info("ReminderService.getLatestIncompleteByDevice | deviceId={}", deviceId);
+        logger.info("🔵 ReminderService.getLatestIncompleteByDevice | deviceId={}", deviceId);
         List<Reminder> reminders = reminderRepository.findLatestIncompleteByDevice(deviceId);
-        logger.info("ReminderService.getLatestIncompleteByDevice | deviceId={} count={}", deviceId, reminders.size());
+        logger.info("🔵 ReminderService.getLatestIncompleteByDevice | deviceId={} found {} reminders", deviceId, reminders.size());
         return reminders.stream().map(PendingReminderResponse::from).collect(Collectors.toList());
     }
 }
