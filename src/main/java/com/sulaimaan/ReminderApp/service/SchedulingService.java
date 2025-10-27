@@ -8,6 +8,7 @@ import org.quartz.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.TimeZone;
 
 @Service
 public class SchedulingService {
@@ -23,6 +24,7 @@ public class SchedulingService {
         System.out.println("🔧 Attempting to schedule task: " + task.getId());
         System.out.println("📋 Task type: " + task.getRecurrenceType());
         System.out.println("⏰ Next reminder at: " + task.getNextReminderAt());
+        System.out.println("🕐 Cron expression: " + task.getCronExpression());
 
         try {
             JobDataMap jobDataMap = new JobDataMap();
@@ -49,12 +51,17 @@ public class SchedulingService {
                 System.out.println("📅 Using SimpleTrigger for SIMPLE task");
                 System.out.println("🎯 Fire time: " + fireTime);
             } else {
+                CronScheduleBuilder cronSchedule = CronScheduleBuilder
+                        .cronSchedule(task.getCronExpression())
+                        .inTimeZone(TimeZone.getTimeZone("UTC"));
+
                 trigger = TriggerBuilder.newTrigger()
                         .withIdentity("trigger-" + task.getId(), "reminder-triggers")
-                        .withSchedule(CronScheduleBuilder.cronSchedule(task.getCronExpression()))
+                        .withSchedule(cronSchedule)
                         .build();
 
                 System.out.println("⏰ Using CronTrigger with expression: " + task.getCronExpression());
+                System.out.println("🌍 Timezone: UTC");
             }
 
             scheduler.scheduleJob(jobDetail, trigger);

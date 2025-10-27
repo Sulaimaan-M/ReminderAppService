@@ -9,11 +9,11 @@ import com.sulaimaan.ReminderApp.helper.CronStringMapper;
 import com.sulaimaan.ReminderApp.helper.NextReminderCalculator;
 import com.sulaimaan.ReminderApp.repository.DeviceTokenRepository;
 import com.sulaimaan.ReminderApp.repository.TaskRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Service
 public class TaskService {
@@ -28,7 +28,6 @@ public class TaskService {
         this.schedulingService = schedulingService;
     }
 
-    @Transactional
     public Task createTask(CreateTaskRequest request) {
         CronStringMapper cronMapper = new CronStringMapper();
         NextReminderCalculator reminderCalculator = new NextReminderCalculator();
@@ -64,7 +63,6 @@ public class TaskService {
         return savedTask;
     }
 
-    @Transactional
     public Task updateTask(Long taskId, UpdateTaskRequest request) {
         CronStringMapper cronMapper = new CronStringMapper();
         NextReminderCalculator reminderCalculator = new NextReminderCalculator();
@@ -96,7 +94,6 @@ public class TaskService {
         return updatedTask;
     }
 
-    @Transactional
     public Task deleteTask(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new InvalidInputException("Task not found with id: " + taskId));
@@ -106,5 +103,9 @@ public class TaskService {
         taskRepository.delete(task);
 
         return task;
+    }
+
+    public List<Task> getTasksByDevice(Long deviceId) {
+        return taskRepository.findNonSimpleTasksByDeviceId(deviceId);
     }
 }

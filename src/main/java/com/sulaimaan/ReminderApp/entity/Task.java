@@ -29,6 +29,7 @@ public class Task {
     @Column(name = "cron_exp", nullable = false)
     private String cronExpression;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "interval_type", nullable = false)
     private RecurrenceType recurrenceType;
 
