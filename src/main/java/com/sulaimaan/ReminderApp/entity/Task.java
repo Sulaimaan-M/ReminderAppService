@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -50,6 +51,9 @@ public class Task {
     @Column(nullable = true)
     private String clientTimezone; // Store the original timezone ID (e.g., "Asia/Kolkata", "+05:30")
 
+    // Cascade removal of reminders when task is deleted
+    @OneToMany(mappedBy = "task", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private List<Reminder> reminders;
 
     public Task(String taskTxt, DeviceToken deviceToken, RecurrenceType recurrenceType, String cronExpression, ZonedDateTime createdAt, ZonedDateTime nextReminderAt, String clientTimezone) {
         this.taskTxt = taskTxt;
