@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sulaimaan.ReminderApp.dto.incoming.CreateTaskRequest;
 import com.sulaimaan.ReminderApp.dto.incoming.UpdateTaskRequest;
+import com.sulaimaan.ReminderApp.dto.outgoing.RecurringTaskResponse;
+import com.sulaimaan.ReminderApp.dto.outgoing.SimpleTaskResponse;
 import com.sulaimaan.ReminderApp.dto.outgoing.TaskResponse;
 import com.sulaimaan.ReminderApp.entity.Task;
 import com.sulaimaan.ReminderApp.service.TaskService;
@@ -15,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CrossOrigin
 @RestController
@@ -55,11 +56,19 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/device/{deviceId}")
-    public List<TaskResponse> getTasksByDevice(@PathVariable Long deviceId) {
-        logger.info("📋 GET /task/device/{}", deviceId);
-        List<Task> tasks = taskService.getTasksByDevice(deviceId);
-        logger.info("✅ GET /task/device/{} | Returning {} tasks", deviceId, tasks.size());
-        return tasks.stream().map(TaskResponse::from).collect(Collectors.toList());
+    @GetMapping("/device/{deviceId}/recurring")
+    public List<RecurringTaskResponse> getRecurringTasks(@PathVariable Long deviceId) {
+        logger.info("📋 GET /task/device/{}/recurring", deviceId);
+        List<RecurringTaskResponse> tasks = taskService.getRecurringTasks(deviceId);
+        logger.info("✅ GET /task/device/{}/recurring | Returning {} tasks", deviceId, tasks.size());
+        return tasks;
+    }
+
+    @GetMapping("/device/{deviceId}/simple")
+    public List<SimpleTaskResponse> getSimpleTasks(@PathVariable Long deviceId) {
+        logger.info("📋 GET /task/device/{}/simple", deviceId);
+        List<SimpleTaskResponse> tasks = taskService.getSimpleTasks(deviceId);
+        logger.info("✅ GET /task/device/{}/simple | Returning {} tasks", deviceId, tasks.size());
+        return tasks;
     }
 }

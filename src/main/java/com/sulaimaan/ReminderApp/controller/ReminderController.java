@@ -1,6 +1,6 @@
 package com.sulaimaan.ReminderApp.controller;
 
-import com.sulaimaan.ReminderApp.dto.outgoing.PendingReminderResponse;
+import com.sulaimaan.ReminderApp.dto.outgoing.DetailedReminderResponse;
 import com.sulaimaan.ReminderApp.service.ReminderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +22,9 @@ public class ReminderController {
     }
 
     @GetMapping("/device/{deviceId}/pending")
-    public List<PendingReminderResponse> getLatestIncompleteByDevice(@PathVariable Long deviceId) {
+    public List<DetailedReminderResponse> getLatestIncompleteByDevice(@PathVariable Long deviceId) {
         logger.info("📋 GET /reminder/device/{}/pending", deviceId);
-        List<PendingReminderResponse> res = reminderService.getLatestIncompleteByDevice(deviceId);
+        List<DetailedReminderResponse> res = reminderService.getLatestIncompleteReminders(deviceId);
         logger.info("✅ GET /reminder/device/{}/pending | Returning {} reminders", deviceId, res.size());
         return res;
     }

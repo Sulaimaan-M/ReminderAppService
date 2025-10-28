@@ -1,7 +1,6 @@
 package com.sulaimaan.ReminderApp.service;
 
 import com.sulaimaan.ReminderApp.dto.outgoing.DetailedReminderResponse;
-import com.sulaimaan.ReminderApp.dto.outgoing.PendingReminderResponse;
 import com.sulaimaan.ReminderApp.entity.Reminder;
 import com.sulaimaan.ReminderApp.entity.Task;
 import com.sulaimaan.ReminderApp.exception_handling.exception.InvalidInputException;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ReminderService {
@@ -30,11 +28,11 @@ public class ReminderService {
         this.taskRepository = taskRepository;
     }
 
-    public List<PendingReminderResponse> getLatestIncompleteByDevice(Long deviceId) {
-        logger.info("ReminderService.getLatestIncompleteByDevice | deviceId={}", deviceId);
-        List<Reminder> reminders = reminderRepository.findLatestIncompleteByDevice(deviceId);
-        logger.info("ReminderService.getLatestIncompleteByDevice | deviceId={} count={}", deviceId, reminders.size());
-        return reminders.stream().map(PendingReminderResponse::from).collect(Collectors.toList());
+    public List<DetailedReminderResponse> getLatestIncompleteReminders(Long deviceId) {
+        logger.info("📋 ReminderService.getLatestIncompleteReminders | deviceId={}", deviceId);
+        List<DetailedReminderResponse> reminders = reminderRepository.findLatestIncompleteRemindersByDeviceId(deviceId);
+        logger.info("✅ ReminderService.getLatestIncompleteReminders | deviceId={} count={}", deviceId, reminders.size());
+        return reminders;
     }
 
     @Transactional
@@ -55,12 +53,5 @@ public class ReminderService {
         Reminder savedReminder = reminderRepository.save(reminder);
         logger.info("ReminderService.createReminderInstance | Saved Reminder id={}, taskId={}", savedReminder.getId(), taskId);
         return savedReminder;
-    }
-
-    public List<DetailedReminderResponse> getLatestIncompleteReminders(Long deviceId) {
-        logger.info("📋 ReminderService.getLatestIncompleteReminders | deviceId={}", deviceId);
-        List<DetailedReminderResponse> reminders = reminderRepository.findLatestIncompleteRemindersByDeviceId(deviceId);
-        logger.info("✅ ReminderService.getLatestIncompleteReminders | deviceId={} count={}", deviceId, reminders.size());
-        return reminders;
     }
 }

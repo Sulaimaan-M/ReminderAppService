@@ -29,7 +29,7 @@ import java.util.Optional;
 @Service
 public class TaskService {
 
-    private static final Logger logger = LoggerFactory.getLogger(TaskService.class); // 🪵 Logger instance
+    private static final Logger logger = LoggerFactory.getLogger(TaskService.class);
 
     private final TaskRepository taskRepository;
     private final DeviceTokenRepository deviceTokenRepository;
@@ -74,7 +74,6 @@ public class TaskService {
         );
         logger.info("➡️ TaskService.createTask | Calculated Next Reminder (Client Zone): {}", nextReminder);
 
-        // --- Store the client's timezone string ---
         String clientTimezone = request.timeDetail.timezone;
         logger.debug(" TaskService.createTask | Storing client timezone: {}", clientTimezone);
 
@@ -85,11 +84,11 @@ public class TaskService {
                 cronExpression,
                 ZonedDateTime.now(ZoneOffset.UTC),
                 nextReminder,
-                clientTimezone // Pass the timezone string to the constructor
+                clientTimezone
         );
 
         logger.debug("💾 TaskService.createTask | Task entity before save: text='{}', type={}, cron='{}', nextAt='{}', deviceId={}, clientZone='{}'",
-                task.getTaskTxt(), task.getRecurrenceType(), task.getCronExpression(), task.getNextReminderAt(), task.getDeviceToken().getId(), task.getClientTimezone()); // Log timezone
+                task.getTaskTxt(), task.getRecurrenceType(), task.getCronExpression(), task.getNextReminderAt(), task.getDeviceToken().getId(), task.getClientTimezone());
 
         Task savedTask = taskRepository.save(task);
         logger.info("✅ TaskService.createTask | Saved Task id={}", savedTask.getId());
@@ -135,19 +134,17 @@ public class TaskService {
         );
         logger.info("➡️ TaskService.updateTask | Calculated Next Reminder (Client Zone): {}", nextReminder);
 
-        // --- Store the client's timezone string on update ---
         String clientTimezone = request.timeDetail.timezone;
         logger.debug(" TaskService.updateTask | Updating client timezone to: {}", clientTimezone);
-
 
         existingTask.setTaskTxt(request.taskText);
         existingTask.setRecurrenceType(request.recurrenceType);
         existingTask.setCronExpression(cronExpression);
         existingTask.setNextReminderAt(nextReminder);
-        existingTask.setClientTimezone(clientTimezone); // Set the timezone
+        existingTask.setClientTimezone(clientTimezone);
 
         logger.debug("💾 TaskService.updateTask | Task entity before update: id={}, text='{}', type={}, cron='{}', nextAt='{}', clientZone='{}'",
-                existingTask.getId(), existingTask.getTaskTxt(), existingTask.getRecurrenceType(), existingTask.getCronExpression(), existingTask.getNextReminderAt(), existingTask.getClientTimezone()); // Log timezone
+                existingTask.getId(), existingTask.getTaskTxt(), existingTask.getRecurrenceType(), existingTask.getCronExpression(), existingTask.getNextReminderAt(), existingTask.getClientTimezone());
 
         Task updatedTask = taskRepository.save(existingTask);
         logger.info("✅ TaskService.updateTask | Updated Task id={}", updatedTask.getId());
@@ -185,18 +182,6 @@ public class TaskService {
         return task;
     }
 
-    public List<Task> getTasksByDevice(Long deviceId) {
-        logger.info("📋 TaskService.getTasksByDevice | deviceId={}", deviceId);
-        List<Task> tasks = taskRepository.findNonSimpleTasksByDeviceId(deviceId);
-
-        if (logger.isDebugEnabled()) {
-            tasks.forEach(task -> logger.debug("  📋 Retrieved Task | id={}, nextReminderAt='{}', clientTimezone='{}' (Raw from DB/JPA)", task.getId(), task.getNextReminderAt(), task.getClientTimezone())); // Log timezone
-        }
-
-        logger.info("✅ TaskService.getTasksByDevice | deviceId={} count={}", deviceId, tasks.size());
-        return tasks;
-    }
-
     @Transactional
     public void updateNextReminderTime(Long taskId, ZonedDateTime currentExecutionTimeUtc) {
         logger.info("⏭️ TaskService.updateNextReminderTime | taskId={}, currentExecutionTimeUtc={}", taskId, currentExecutionTimeUtc);
@@ -219,9 +204,6 @@ public class TaskService {
                 );
                 logger.info("  ➡️ New nextExecutionTimeUtc: {}", nextExecutionTimeUtc);
 
-                // --- IMPORTANT: Store the UTC time calculated from cron ---
-                // We keep the clientTimezone field as is, but update nextReminderAt to the *next* UTC instant.
-                // The conversion back to client zone happens when sending the response.
                 task.setNextReminderAt(nextExecutionTimeUtc);
                 logger.debug("  💾 Saving updated nextReminderAt='{}' (UTC) for taskId={}", nextExecutionTimeUtc, taskId);
                 taskRepository.save(task);
@@ -237,7 +219,6 @@ public class TaskService {
         }
     }
 
-    // ✅ NEW: Get recurring tasks as DTOs
     public List<RecurringTaskResponse> getRecurringTasks(Long deviceId) {
         logger.info("📋 TaskService.getRecurringTasks | deviceId={}", deviceId);
         List<RecurringTaskResponse> tasks = taskRepository.findRecurringTasksByDeviceId(deviceId);
@@ -245,7 +226,6 @@ public class TaskService {
         return tasks;
     }
 
-    // ✅ NEW: Get simple tasks as DTOs (with optional reminder)
     public List<SimpleTaskResponse> getSimpleTasks(Long deviceId) {
         logger.info("📋 TaskService.getSimpleTasks | deviceId={}", deviceId);
 
@@ -262,7 +242,7 @@ public class TaskService {
                                 p.getRemindedAt(),
                                 p.getIsCompleted()
                         )
-                                : null  // ✅ NULL if no reminder exists
+                                : null
                 ))
                 .toList();
 
