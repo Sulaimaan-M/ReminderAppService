@@ -1,9 +1,17 @@
 package com.sulaimaan.ReminderApp.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.ZonedDateTime;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reminder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,32 +27,4 @@ public class Reminder {
 
     @Column(name = "is_completed", nullable = false)
     private Boolean isCompleted = false;
-
-    public Long getId() {
-        return id;
-    }
-
-    public Task getTask() {
-        return task;
-    }
-
-    public void setTask(Task task) {
-        this.task = task;
-    }
-
-    public ZonedDateTime getRemindedAt() {
-        return remindedAt;
-    }
-
-    public void setRemindedAt(ZonedDateTime remindedAt) {
-        this.remindedAt = remindedAt;
-    }
-
-    public Boolean getCompleted() {
-        return isCompleted;
-    }
-
-    public void setCompleted(Boolean completed) {
-        isCompleted = completed;
-    }
 }

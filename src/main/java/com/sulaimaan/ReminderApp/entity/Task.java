@@ -5,8 +5,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,23 +40,22 @@ public class Task {
     @NotBlank(message = "Cron expression cannot be blank")
     private String cronExpression;
 
-    // --- Removed @ColumnDefinition ---
-    @Column(nullable = false) // Defaults usually map to TIMESTAMP or DATETIME
+    @Column(nullable = false)
     @NotNull(message = "Creation timestamp cannot be null")
     private ZonedDateTime createdAt;
 
-    // --- Removed @ColumnDefinition ---
-    @Column(nullable = false) // Defaults usually map to TIMESTAMP or DATETIME
+    @Column(nullable = false)
     @NotNull(message = "Next reminder timestamp cannot be null")
     private ZonedDateTime nextReminderAt;
 
     @Column(nullable = true)
-    private String clientTimezone; // Store the original timezone ID (e.g., "Asia/Kolkata", "+05:30")
+    private String clientTimezone;
 
     // Cascade removal of reminders when task is deleted
     @OneToMany(mappedBy = "task", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Reminder> reminders;
 
+    // Keep the constructor for manual creation
     public Task(String taskTxt, DeviceToken deviceToken, RecurrenceType recurrenceType, String cronExpression, ZonedDateTime createdAt, ZonedDateTime nextReminderAt, String clientTimezone) {
         this.taskTxt = taskTxt;
         this.deviceToken = deviceToken;
@@ -64,5 +65,4 @@ public class Task {
         this.nextReminderAt = nextReminderAt;
         this.clientTimezone = clientTimezone;
     }
-
 }
