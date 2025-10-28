@@ -23,4 +23,12 @@ public interface ReminderRepository extends JpaRepository<Reminder, Long> {
             ") " +
             "ORDER BY r.remindedAt DESC")
     List<DetailedReminderResponse> findLatestIncompleteRemindersByDeviceId(@Param("deviceId") Long deviceId);
+
+    // NEW: Find all reminders by task ID
+    @Query("SELECT new com.sulaimaan.ReminderApp.dto.outgoing.DetailedReminderResponse(" +
+            "r.id, r.remindedAt, r.isCompleted, t.id, t.taskTxt, t.recurrenceType) " +
+            "FROM Reminder r JOIN r.task t " +
+            "WHERE t.id = :taskId " +
+            "ORDER BY r.remindedAt DESC")
+    List<DetailedReminderResponse> findRemindersByTaskId(@Param("taskId") Long taskId);
 }

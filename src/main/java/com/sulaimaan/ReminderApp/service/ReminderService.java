@@ -37,8 +37,15 @@ public class ReminderService {
         return reminders;
     }
 
+    public List<DetailedReminderResponse> getRemindersByTaskId(Long taskId) {
+        logger.info("📋 ReminderService.getRemindersByTaskId | taskId={}", taskId);
+        List<DetailedReminderResponse> reminders = reminderRepository.findRemindersByTaskId(taskId);
+        logger.info("✅ ReminderService.getRemindersByTaskId | taskId={} count={}", taskId, reminders.size());
+        return reminders;
+    }
+
     @Transactional
-    public void createReminderInstance(Long taskId) {
+    public Reminder createReminderInstance(Long taskId) {
         logger.info("🔔 ReminderService.createReminderInstance | taskId={}", taskId);
 
         Task task = taskRepository.findById(taskId)
@@ -54,12 +61,13 @@ public class ReminderService {
 
         Reminder savedReminder = reminderRepository.save(reminder);
         logger.info("🔔 ReminderService.createReminderInstance | Saved Reminder id={}, taskId={}", savedReminder.getId(), taskId);
+        return savedReminder;
     }
 
     /**
-     * Complete a reminder based on business logic:
-     * - If task is SIMPLE → Delete both reminder and task
-     * - If task is recurring → Set reminder.isCompleted = true
+     * Complete a reminder by deleting it
+     * - For SIMPLE tasks: Delete both reminder and task
+     * - For recurring tasks: Delete only the reminder instance
      *
      * @param reminderId ID of the reminder to complete
      * @return true if successful, false if reminder not found
@@ -77,12 +85,6 @@ public class ReminderService {
 
         Reminder reminder = reminderOptional.get();
 
-        // Check if already completed
-        if (reminder.getIsCompleted()) {
-            logger.info("ℹ️ ReminderService.completeReminder | Reminder already completed, id={}", reminderId);
-            return true; // Already completed, consider it success
-        }
-
         // Get the associated task
         Task task = reminder.getTask();
         if (task == null) {
@@ -93,20 +95,15 @@ public class ReminderService {
         logger.info("🔍 ReminderService.completeReminder | Task type={}, reminderId={}, taskId={}",
                 task.getRecurrenceType(), reminderId, task.getId());
 
-        // Business logic: Check if task is SIMPLE
+        // For SIMPLE tasks, delete both reminder and task
         if (task.getRecurrenceType() == RecurrenceType.SIMPLE) {
-            // Delete both reminder and task
             logger.info("🗑️ ReminderService.completeReminder | SIMPLE task - deleting task {} and reminder {}",
                     task.getId(), reminderId);
-            taskRepository.delete(task);
-            // Reminder will be cascade deleted, but let's be explicit
-            reminderRepository.delete(reminder);
+            taskRepository.delete(task); // This will cascade delete the reminder due to CascadeType.REMOVE
         } else {
-            // Update reminder status to completed
-            logger.info("✏️ ReminderService.completeReminder | Recurring task - marking reminder {} as completed",
-                    reminderId);
-            reminder.setIsCompleted(true);
-            reminderRepository.save(reminder);
+            // For recurring tasks, delete only the reminder
+            logger.info("🗑️ ReminderService.completeReminder | Recurring task - deleting reminder {}", reminderId);
+            reminderRepository.delete(reminder);
         }
 
         return true;

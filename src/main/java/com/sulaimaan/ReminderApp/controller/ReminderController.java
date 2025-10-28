@@ -30,7 +30,15 @@ public class ReminderController {
         return res;
     }
 
-    // NEW ENDPOINT: Complete a reminder
+    // NEW ENDPOINT: Get all reminders by task ID
+    @GetMapping("/task/{taskId}")
+    public List<DetailedReminderResponse> getRemindersByTask(@PathVariable Long taskId) {
+        logger.info("📋 GET /reminder/task/{}", taskId);
+        List<DetailedReminderResponse> reminders = reminderService.getRemindersByTaskId(taskId);
+        logger.info("✅ GET /reminder/task/{} | Returning {} reminders", taskId, reminders.size());
+        return reminders;
+    }
+
     @PutMapping("/{id}/complete")
     public ResponseEntity<Void> completeReminder(@PathVariable Long id) {
         logger.info("✅ PUT /reminder/{}/complete", id);
@@ -38,14 +46,14 @@ public class ReminderController {
             boolean success = reminderService.completeReminder(id);
             if (success) {
                 logger.info("✅ PUT /reminder/{}/complete | Reminder completed successfully", id);
-                return ResponseEntity.noContent().build(); // 204 No Content for success
+                return ResponseEntity.noContent().build();
             } else {
                 logger.warn("⚠️ PUT /reminder/{}/complete | Reminder not found or already completed", id);
-                return ResponseEntity.notFound().build(); // 404 Not Found
+                return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
             logger.error("❌ PUT /reminder/{}/complete | Error completing reminder: {}", id, e.getMessage(), e);
-            return ResponseEntity.internalServerError().build(); // 500 Internal Server Error
+            return ResponseEntity.internalServerError().build();
         }
     }
 }
