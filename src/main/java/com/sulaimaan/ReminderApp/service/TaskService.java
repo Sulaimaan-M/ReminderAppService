@@ -2,6 +2,9 @@ package com.sulaimaan.ReminderApp.service;
 
 import com.sulaimaan.ReminderApp.dto.incoming.CreateTaskRequest;
 import com.sulaimaan.ReminderApp.dto.incoming.UpdateTaskRequest;
+import com.sulaimaan.ReminderApp.dto.outgoing.RecurringTaskResponse;
+import com.sulaimaan.ReminderApp.dto.outgoing.SimpleTaskResponse;
+import com.sulaimaan.ReminderApp.dto.outgoing.MinimalReminderResponse;
 import com.sulaimaan.ReminderApp.entity.DeviceToken;
 import com.sulaimaan.ReminderApp.entity.Task;
 import com.sulaimaan.ReminderApp.exception_handling.exception.InvalidInputException;
@@ -10,6 +13,7 @@ import com.sulaimaan.ReminderApp.helper.CronNextExecutionCalculator;
 import com.sulaimaan.ReminderApp.helper.CronStringMapper;
 import com.sulaimaan.ReminderApp.helper.NextReminderCalculator;
 import com.sulaimaan.ReminderApp.helper.RecurrenceType;
+import com.sulaimaan.ReminderApp.projection.SimpleTaskProjection;
 import com.sulaimaan.ReminderApp.repository.DeviceTokenRepository;
 import com.sulaimaan.ReminderApp.repository.TaskRepository;
 import org.slf4j.Logger;
@@ -231,5 +235,38 @@ public class TaskService {
         } else {
             logger.info("ℹ️ TaskService.updateNextReminderTime | TaskId={} is SIMPLE, not updating next time.", taskId);
         }
+    }
+
+    // ✅ NEW: Get recurring tasks as DTOs
+    public List<RecurringTaskResponse> getRecurringTasks(Long deviceId) {
+        logger.info("📋 TaskService.getRecurringTasks | deviceId={}", deviceId);
+        List<RecurringTaskResponse> tasks = taskRepository.findRecurringTasksByDeviceId(deviceId);
+        logger.info("✅ TaskService.getRecurringTasks | deviceId={} count={}", deviceId, tasks.size());
+        return tasks;
+    }
+
+    // ✅ NEW: Get simple tasks as DTOs (with optional reminder)
+    public List<SimpleTaskResponse> getSimpleTasks(Long deviceId) {
+        logger.info("📋 TaskService.getSimpleTasks | deviceId={}", deviceId);
+
+        List<SimpleTaskProjection> projections = taskRepository.findSimpleTaskProjectionsByDeviceId(deviceId);
+
+        List<SimpleTaskResponse> responses = projections.stream()
+                .map(p -> new SimpleTaskResponse(
+                        p.getTaskId(),
+                        p.getTaskTxt(),
+                        p.getNextReminderAt(),
+                        p.getReminderId() != null
+                                ? new MinimalReminderResponse(
+                                p.getReminderId(),
+                                p.getRemindedAt(),
+                                p.getIsCompleted()
+                        )
+                                : null  // ✅ NULL if no reminder exists
+                ))
+                .toList();
+
+        logger.info("✅ TaskService.getSimpleTasks | deviceId={} count={}", deviceId, responses.size());
+        return responses;
     }
 }
