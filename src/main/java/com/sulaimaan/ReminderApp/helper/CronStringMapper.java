@@ -1,76 +1,80 @@
 package com.sulaimaan.ReminderApp.helper;
 
 import com.sulaimaan.ReminderApp.dto.incoming.minor.RecurrencePattern;
-import com.sulaimaan.ReminderApp.dto.incoming.minor.TimeDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 /**
- * Utility class for building Quartz cron expressions from time details and recurrence patterns
+ * Utility class for building Quartz cron expressions from ZonedDateTime and recurrence patterns
  */
 public class CronStringMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(CronStringMapper.class);
 
     /**
-     * Builds a UTC-based cron expression from client time details and recurrence pattern
+     * Builds UTC-based cron expression from next reminder time and recurrence pattern
      */
-    public String buildCronExpression(TimeDetail timeDetail, RecurrencePattern pattern, RecurrenceType type) {
-        logger.info("🛠️ Building Cron | Type: {}, Time(client): {}:{}:{} @ {}, Pattern: D={}, W={}, M={}, Y={}",
-                type, timeDetail.hours, timeDetail.minutes, timeDetail.seconds, timeDetail.timezone,
-                pattern.dayOfMonth, pattern.dayOfWeek, pattern.month, pattern.year);
+    public String buildCronExpression(ZonedDateTime nextReminderAt, RecurrencePattern pattern, RecurrenceType type) {
+        logger.info("Building cron expression | Type: {}, NextReminderAt: {}, Pattern: D={}, W={}, M={}, Y={}",
+                type, nextReminderAt, pattern.dayOfMonth, pattern.dayOfWeek, pattern.month, pattern.year);
 
-        LocalTime utcTime = TimeConverter.convertToUtc(timeDetail);
+        ZonedDateTime utcTime = nextReminderAt.withZoneSameInstant(ZoneOffset.UTC);
         int utcSecond = utcTime.getSecond();
         int utcMinute = utcTime.getMinute();
         int utcHour = utcTime.getHour();
 
-        logger.debug(" UTC Time Components for Cron: {}:{}:{}", utcHour, utcMinute, utcSecond);
+        logger.debug("Converted to UTC time components: {}:{}:{}", utcHour, utcMinute, utcSecond);
 
         String cronDayOfMonth = pattern.dayOfMonth;
         String cronMonth = pattern.month;
         String cronDayOfWeek = pattern.dayOfWeek;
-        String cronYear = pattern.year;
 
         switch (type) {
             case SIMPLE:
-                logger.debug(" SIMPLE | Using specific date from pattern for cron structure.");
+                int dayOfMonth = utcTime.getDayOfMonth();
+                int month = utcTime.getMonthValue();
+                cronDayOfMonth = String.valueOf(dayOfMonth);
+                cronMonth = String.valueOf(month);
+                cronDayOfWeek = "?";
+                logger.debug("SIMPLE: Using specific date D={}, M={}", cronDayOfMonth, cronMonth);
                 break;
+
             case DAILY:
                 cronDayOfMonth = "*";
                 cronMonth = "*";
                 cronDayOfWeek = "?";
-                cronYear = "*";
-                logger.debug(" DAILY | Setting D='*', M='*', W='?', Y='*'");
+                logger.debug("DAILY: D='*', M='*', W='?'");
                 break;
+
             case WEEKLY:
                 cronDayOfMonth = "?";
                 cronMonth = "*";
-                logger.debug(" WEEKLY | Using W='{}' from pattern, setting D='?', M='*', Y='*'", cronDayOfWeek);
-                cronYear = "*";
+                logger.debug("WEEKLY: Using pattern W='{}', D='?', M='*'", cronDayOfWeek);
                 break;
+
             case MONTHLY:
                 cronMonth = "*";
                 cronDayOfWeek = "?";
-                cronYear = "*";
-                logger.debug(" MONTHLY | Using D='{}' from pattern, setting W='?', M='*', Y='*'", cronDayOfMonth);
+                logger.debug("MONTHLY: Using pattern D='{}', W='?', M='*'", cronDayOfMonth);
                 break;
+
             case YEARLY:
                 cronDayOfWeek = "?";
-                cronYear = "*";
-                logger.debug(" YEARLY | Using D='{}', M='{}' from pattern, setting W='?', Y='*'", cronDayOfMonth, cronMonth);
+                logger.debug("YEARLY: Using pattern D='{}', M='{}', W='?'", cronDayOfMonth, cronMonth);
                 break;
+
             default:
-                logger.error("❌ Unsupported RecurrenceType for Cron: {}", type);
+                logger.error("Unsupported RecurrenceType: {}", type);
                 throw new IllegalArgumentException("Unsupported recurrence type: " + type);
         }
 
         String cronExpression = String.format("%d %d %d %s %s %s",
                 utcSecond, utcMinute, utcHour, cronDayOfMonth, cronMonth, cronDayOfWeek);
 
-        logger.info("✅ Cron Expression (UTC based): {}", cronExpression);
+        logger.info("Built cron expression (UTC): {}", cronExpression);
         return cronExpression;
     }
 }
