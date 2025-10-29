@@ -8,8 +8,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+/**
+ * Repository interface for Reminder entity database operations
+ */
 public interface ReminderRepository extends JpaRepository<Reminder, Long> {
 
+    /**
+     * Finds the latest incomplete reminder for each recurring task associated with a device
+     */
     @Query("SELECT new com.sulaimaan.ReminderApp.dto.outgoing.DetailedReminderResponse(" +
             "r.id, r.remindedAt, r.isCompleted, t.id, t.taskTxt, t.recurrenceType) " +
             "FROM Reminder r JOIN r.task t " +
@@ -24,7 +30,9 @@ public interface ReminderRepository extends JpaRepository<Reminder, Long> {
             "ORDER BY r.remindedAt DESC")
     List<DetailedReminderResponse> findLatestIncompleteRemindersByDeviceId(@Param("deviceId") Long deviceId);
 
-    // NEW: Find all reminders by task ID
+    /**
+     * Finds all reminders associated with a specific task ordered by reminded time
+     */
     @Query("SELECT new com.sulaimaan.ReminderApp.dto.outgoing.DetailedReminderResponse(" +
             "r.id, r.remindedAt, r.isCompleted, t.id, t.taskTxt, t.recurrenceType) " +
             "FROM Reminder r JOIN r.task t " +

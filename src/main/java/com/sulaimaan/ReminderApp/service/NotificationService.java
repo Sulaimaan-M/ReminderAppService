@@ -6,9 +6,15 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service for sending push notifications via Firebase Cloud Messaging
+ */
 @Service
 public class NotificationService {
 
+    /**
+     * Sends a push notification to a device using its FCM token
+     */
     public void sendPushNotification(String fcmToken, String message) {
         try {
             Notification notification = Notification.builder()

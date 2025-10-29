@@ -5,6 +5,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * DTO representing time details for a task including hours, minutes, seconds, and timezone
+ */
 public class TimeDetail {
 
     @NotNull(message = "Seconds cannot be null")

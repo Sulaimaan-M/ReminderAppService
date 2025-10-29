@@ -8,34 +8,38 @@ import org.slf4j.LoggerFactory;
 
 import java.time.*;
 
+/**
+ * Utility class for calculating the next reminder execution time based on recurrence type and pattern
+ */
 public class NextReminderCalculator {
 
-    private static final Logger logger = LoggerFactory.getLogger(NextReminderCalculator.class); // 🪵 Logger instance
+    private static final Logger logger = LoggerFactory.getLogger(NextReminderCalculator.class);
 
+    /**
+     * Calculates the next reminder time in the client's timezone based on recurrence configuration
+     */
     public ZonedDateTime calculateNextReminder(TimeDetail timeDetail, RecurrencePattern pattern, RecurrenceType type) {
-        // 🪵 Log the inputs for calculation
         logger.info("🚀 Calculating Next Reminder | Type: {}, Time: {}:{}:{}, Zone: {}, Pattern: D={}, W={}, M={}, Y={}",
-                type, timeDetail.hours, timeDetail.minutes, timeDetail.seconds, timeDetail.timezone, // Use field access
-                pattern.dayOfMonth, pattern.dayOfWeek, pattern.month, pattern.year); // Use field access
+                type, timeDetail.hours, timeDetail.minutes, timeDetail.seconds, timeDetail.timezone,
+                pattern.dayOfMonth, pattern.dayOfWeek, pattern.month, pattern.year);
 
         ZoneId zoneId;
         try {
-            zoneId = ZoneId.of(timeDetail.timezone); // Use field access
+            zoneId = ZoneId.of(timeDetail.timezone);
             logger.debug("🌍 ZoneId for calculation: {}", zoneId);
         } catch (Exception e) {
-            logger.error("❌ Invalid timezone string for calculation: {}", timeDetail.timezone, e); // Use field access
-            throw new InvalidInputException("Invalid timezone: " + timeDetail.timezone); // Use field access
+            logger.error("❌ Invalid timezone string for calculation: {}", timeDetail.timezone, e);
+            throw new InvalidInputException("Invalid timezone: " + timeDetail.timezone);
         }
 
         ZonedDateTime nowInClientZone = ZonedDateTime.now(zoneId);
         logger.debug("⏳ Current time in client zone [{}]: {}", zoneId, nowInClientZone);
 
-        // Create the initial 'target' time based on today's date in the client's zone
         ZonedDateTime targetTime = nowInClientZone
-                .withHour(timeDetail.hours) // Use field access
-                .withMinute(timeDetail.minutes) // Use field access
-                .withSecond(timeDetail.seconds) // Use field access
-                .withNano(0); // Ensure nano is 0
+                .withHour(timeDetail.hours)
+                .withMinute(timeDetail.minutes)
+                .withSecond(timeDetail.seconds)
+                .withNano(0);
 
         logger.debug("🎯 Initial target time based on 'now': {}", targetTime);
 
@@ -43,15 +47,13 @@ public class NextReminderCalculator {
 
         switch (type) {
             case SIMPLE:
-                int year = Integer.parseInt(pattern.year); // Use field access
-                int month = Integer.parseInt(pattern.month); // Use field access
-                int day = Integer.parseInt(pattern.dayOfMonth); // Use field access
-                // For SIMPLE, use the exact date provided in the pattern
+                int year = Integer.parseInt(pattern.year);
+                int month = Integer.parseInt(pattern.month);
+                int day = Integer.parseInt(pattern.dayOfMonth);
                 ZonedDateTime exact = ZonedDateTime.of(LocalDate.of(year, month, day),
-                        LocalTime.of(timeDetail.hours, timeDetail.minutes, timeDetail.seconds), // Use field access
+                        LocalTime.of(timeDetail.hours, timeDetail.minutes, timeDetail.seconds),
                         zoneId);
                 logger.debug(" SIMPLE | Exact specified time: {}", exact);
-                // Simple tasks should ideally be in the future, throw if not.
                 if (exact.isBefore(nowInClientZone)) {
                     logger.warn("❌ SIMPLE task specified time {} is in the past compared to {}", exact, nowInClientZone);
                     throw new InvalidInputException("Simple reminder time must be in the future.");
@@ -65,21 +67,18 @@ public class NextReminderCalculator {
                 break;
 
             case WEEKLY:
-                nextReminder = adjustToFuture(targetTime, nowInClientZone, adjusted -> adjusted.plusDays(1)); // Start check from tomorrow if today's time passed
+                nextReminder = adjustToFuture(targetTime, nowInClientZone, adjusted -> adjusted.plusDays(1));
                 logger.debug(" WEEKLY | Initial check time (cron will refine): {}", nextReminder);
-                // Complex logic could parse pattern.dayOfWeek here, but relies on CronNextExecutionCalculator anyway.
                 break;
 
             case MONTHLY:
-                nextReminder = adjustToFuture(targetTime, nowInClientZone, adjusted -> adjusted.plusDays(1)); // Start check from tomorrow
+                nextReminder = adjustToFuture(targetTime, nowInClientZone, adjusted -> adjusted.plusDays(1));
                 logger.debug(" MONTHLY | Initial check time (cron will refine): {}", nextReminder);
-                // Actual next date depends on dayOfMonth/range which cron parser handles.
                 break;
 
             case YEARLY:
-                nextReminder = adjustToFuture(targetTime, nowInClientZone, adjusted -> adjusted.plusDays(1)); // Start check from tomorrow
+                nextReminder = adjustToFuture(targetTime, nowInClientZone, adjusted -> adjusted.plusDays(1));
                 logger.debug(" YEARLY | Initial check time (cron will refine): {}", nextReminder);
-                // Actual next date depends on month/dayOfMonth which cron parser handles.
                 break;
 
             default:
@@ -87,12 +86,13 @@ public class NextReminderCalculator {
                 throw new InvalidInputException("Unsupported recurrence type: " + type);
         }
 
-        // 🪵 Log the final calculated ZonedDateTime before returning
         logger.info("✅ Calculated Next Reminder At (Client Zone [{}]): {}", zoneId, nextReminder);
         return nextReminder;
     }
 
-    // Helper to advance the target time if it's already passed today
+    /**
+     * Adjusts the target time to the future if it has already passed
+     */
     private ZonedDateTime adjustToFuture(ZonedDateTime target, ZonedDateTime now, java.util.function.UnaryOperator<ZonedDateTime> advanceLogic) {
         if (target.isBefore(now)) {
             logger.debug("  Adjusting future | Target {} is before now {}, applying advance logic.", target, now);
@@ -101,7 +101,7 @@ public class NextReminderCalculator {
             return advanced;
         } else {
             logger.debug("  Adjusting future | Target {} is NOT before now {}, using target.", target, now);
-            return target; // Target time is today and hasn't passed yet
+            return target;
         }
     }
 }

@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service for managing device token registration and retrieval
+ */
 @Service
 public class DeviceTokenService {
 
@@ -19,6 +22,9 @@ public class DeviceTokenService {
         this.deviceTokenRepo = deviceTokenRepo;
     }
 
+    /**
+     * Registers a device FCM token or retrieves existing one if already registered
+     */
     public DeviceToken registerDevice(String fcmToken) {
         logger.info("🔵 DeviceTokenService.registerDevice | tokenLen={}", fcmToken == null ? 0 : fcmToken.length());
         DeviceToken existing = deviceTokenRepo.findByFcmToken(fcmToken);
@@ -33,6 +39,9 @@ public class DeviceTokenService {
         return saved;
     }
 
+    /**
+     * Retrieves a device token by its ID
+     */
     public DeviceToken getDeviceTokenById(Long id) {
         logger.info("🔵 DeviceTokenService.getDeviceTokenById | id={}", id);
         return deviceTokenRepo.findById(id).orElse(null);

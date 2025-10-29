@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller for managing tasks (create, update, delete, retrieve)
+ */
 @CrossOrigin
 @RestController
 @RequestMapping("/task")
@@ -32,43 +35,68 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    /**
+     * Creates a new task (simple or recurring) and schedules associated reminders
+     */
     @PostMapping
     public TaskResponse createTask(@Valid @RequestBody CreateTaskRequest request) throws JsonProcessingException {
-        logger.info("✨ POST /task | Received: {}", objectMapper.writeValueAsString(request));
+        logger.info("Received task creation request: {}", objectMapper.writeValueAsString(request));
+
         Task task = taskService.createTask(request);
-        logger.info("✅ POST /task | Created taskId={}", task.getId());
+
+        logger.info("Task created successfully with ID: {}", task.getId());
         return TaskResponse.from(task);
     }
 
+    /**
+     * Updates an existing task and reschedules its reminders if necessary
+     */
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateTask(@PathVariable Long id, @Valid @RequestBody UpdateTaskRequest request) throws JsonProcessingException {
-        logger.info("✏️ PUT /task/{} | Received: {}", id, objectMapper.writeValueAsString(request));
+        logger.info("Received update request for task ID {}: {}", id, objectMapper.writeValueAsString(request));
+
         taskService.updateTask(id, request);
-        logger.info("✅ PUT /task/{} | Updated (204 No Content)", id);
+
+        logger.info("Task ID {} updated successfully", id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Deletes a task and cancels all associated scheduled reminders
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        logger.info("🗑️ DELETE /task/{}", id);
+        logger.info("Received deletion request for task ID: {}", id);
+
         taskService.deleteTask(id);
-        logger.info("✅ DELETE /task/{} | Deleted (204 No Content)", id);
+
+        logger.info("Task ID {} deleted successfully", id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Retrieves all recurring tasks for a specific device
+     */
     @GetMapping("/device/{deviceId}/recurring")
     public List<RecurringTaskResponse> getRecurringTasks(@PathVariable Long deviceId) {
-        logger.info("📋 GET /task/device/{}/recurring", deviceId);
+        logger.info("Fetching recurring tasks for device ID: {}", deviceId);
+
         List<RecurringTaskResponse> tasks = taskService.getRecurringTasks(deviceId);
-        logger.info("✅ GET /task/device/{}/recurring | Returning {} tasks", deviceId, tasks.size());
+
+        logger.info("Retrieved {} recurring tasks for device ID: {}", tasks.size(), deviceId);
         return tasks;
     }
 
+    /**
+     * Retrieves all simple (one-time) tasks for a specific device
+     */
     @GetMapping("/device/{deviceId}/simple")
     public List<SimpleTaskResponse> getSimpleTasks(@PathVariable Long deviceId) {
-        logger.info("📋 GET /task/device/{}/simple", deviceId);
+        logger.info("Fetching simple tasks for device ID: {}", deviceId);
+
         List<SimpleTaskResponse> tasks = taskService.getSimpleTasks(deviceId);
-        logger.info("✅ GET /task/device/{}/simple | Returning {} tasks", deviceId, tasks.size());
+
+        logger.info("Retrieved {} simple tasks for device ID: {}", tasks.size(), deviceId);
         return tasks;
     }
 }

@@ -2,6 +2,9 @@ package com.sulaimaan.ReminderApp.dto.incoming.minor;
 
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * DTO representing the recurrence pattern using cron-like expressions for scheduling
+ */
 public class RecurrencePattern {
 
     @NotBlank(message = "Day of month cannot be blank")

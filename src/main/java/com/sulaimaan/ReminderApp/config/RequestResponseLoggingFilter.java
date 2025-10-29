@@ -12,12 +12,18 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * HTTP filter that logs all incoming requests and outgoing responses with timing information
+ */
 @Component
 @Order(1)
 public class RequestResponseLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(RequestResponseLoggingFilter.class);
 
+    /**
+     * Intercepts HTTP requests and responses to log method, URI, status code, and duration
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -29,14 +35,14 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
         String query = request.getQueryString();
         String fullPath = (query == null) ? uri : uri + "?" + query;
 
-        logger.info("➡️  {} {}", method, fullPath);
+        logger.info("Incoming Request: {} {}", method, fullPath);
 
         try {
             filterChain.doFilter(request, response);
         } finally {
             long duration = System.currentTimeMillis() - start;
             int status = response.getStatus();
-            logger.info("⬅️  {} {} -> {} ({} ms)", method, fullPath, status, duration);
+            logger.info("Completed Request: {} {} | Status: {} | Duration: {} ms", method, fullPath, status, duration);
         }
     }
 }

@@ -8,6 +8,9 @@ import lombok.Setter;
 
 import java.time.ZonedDateTime;
 
+/**
+ * Response DTO for recurring tasks with next scheduled reminder time
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,7 +18,6 @@ import java.time.ZonedDateTime;
 public class RecurringTaskResponse {
     private Long id;
     private String taskTxt;
-    private RecurrenceType recurrenceType;  // DAILY, WEEKLY, MONTHLY, etc.
-    private ZonedDateTime nextReminderAt;   // When next reminder will fire
-
+    private RecurrenceType recurrenceType;
+    private ZonedDateTime nextReminderAt;
 }

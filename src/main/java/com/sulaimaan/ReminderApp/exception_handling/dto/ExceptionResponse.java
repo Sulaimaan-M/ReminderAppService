@@ -2,6 +2,9 @@ package com.sulaimaan.ReminderApp.exception_handling.dto;
 
 import java.time.ZonedDateTime;
 
+/**
+ * DTO for standardized exception response structure across the application
+ */
 public class ExceptionResponse {
 
     public String message;

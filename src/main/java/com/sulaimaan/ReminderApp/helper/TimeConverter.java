@@ -9,46 +9,43 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+/**
+ * Utility class for converting client timezone time to UTC for scheduling purposes
+ */
 public class TimeConverter {
 
-    private static final Logger logger = LoggerFactory.getLogger(TimeConverter.class); // 🪵 Logger instance
+    private static final Logger logger = LoggerFactory.getLogger(TimeConverter.class);
 
+    /**
+     * Converts client time details from their timezone to UTC time components
+     */
     public static LocalTime convertToUtc(TimeDetail timeDetail) {
-        // 🪵 Log the input time detail received from the client
         logger.info("🕰️➡️ UTC | Input TimeDetail: hours={}, minutes={}, seconds={}, timezone={}",
-                timeDetail.hours, timeDetail.minutes, timeDetail.seconds, timeDetail.timezone); // Use field access
+                timeDetail.hours, timeDetail.minutes, timeDetail.seconds, timeDetail.timezone);
 
         ZoneId zoneId;
         try {
-            zoneId = ZoneId.of(timeDetail.timezone); // Use field access
-            // 🪵 Log the identified ZoneId
+            zoneId = ZoneId.of(timeDetail.timezone);
             logger.debug("🌍 Identified ZoneId: {}", zoneId);
         } catch (Exception e) {
-            // 🪵 Log error if the timezone string is invalid
-            logger.error("❌ Invalid timezone string provided: {}", timeDetail.timezone, e); // Use field access
-            throw new InvalidInputException("Invalid timezone: " + timeDetail.timezone); // Use field access
+            logger.error("❌ Invalid timezone string provided: {}", timeDetail.timezone, e);
+            throw new InvalidInputException("Invalid timezone: " + timeDetail.timezone);
         }
 
-        // Create a ZonedDateTime representing "today" at the client's specified time and zone
         ZonedDateTime clientTime = ZonedDateTime.now(zoneId)
-                .withHour(timeDetail.hours) // Use field access
-                .withMinute(timeDetail.minutes) // Use field access
-                .withSecond(timeDetail.seconds) // Use field access
-                .withNano(0); // Ensure nano is 0 for consistency
+                .withHour(timeDetail.hours)
+                .withMinute(timeDetail.minutes)
+                .withSecond(timeDetail.seconds)
+                .withNano(0);
 
-        // 🪵 Log the created ZonedDateTime in the client's timezone
         logger.debug("📅 Client's ZonedDateTime (conceptual 'today'): {}", clientTime);
 
-        // Convert this time to UTC
         ZonedDateTime utcTime = clientTime.withZoneSameInstant(ZoneId.of("UTC"));
 
-        // 🪵 Log the resulting ZonedDateTime in UTC
         logger.debug(" UTC ZonedDateTime: {}", utcTime);
 
-        // Extract only the time part (hour, minute, second) from the UTC ZonedDateTime
         LocalTime utcLocalTime = utcTime.toLocalTime();
 
-        // 🪵 Log the final UTC LocalTime being returned for cron calculation
         logger.info("✅ UTC | Output LocalTime for Cron: {}", utcLocalTime);
         return utcLocalTime;
     }

@@ -13,21 +13,29 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.TimeZone;
 
+/**
+ * Utility component for calculating the next execution time based on a Quartz cron expression
+ */
 @Component
 public class CronNextExecutionCalculator {
 
     private static final Logger logger = LoggerFactory.getLogger(CronNextExecutionCalculator.class);
 
+    /**
+     * Calculates the next execution time from the current UTC time
+     */
     public ZonedDateTime getNextExecutionTime(String cronExpression) {
         return getNextExecutionTime(cronExpression, ZonedDateTime.now(ZoneOffset.UTC));
     }
 
+    /**
+     * Calculates the next execution time from a specified point in time using Quartz cron expression
+     */
     public ZonedDateTime getNextExecutionTime(String cronExpression, ZonedDateTime fromTime) {
         logger.info("CronNextExecutionCalculator | (Quartz) cron='{}' from={}", cronExpression, fromTime);
         try {
-            // Quartz CronExpression supports 6 or 7 fields (year optional) — matches our scheduler
             CronExpression quartzCron = new CronExpression(cronExpression);
-            quartzCron.setTimeZone(TimeZone.getTimeZone("UTC")); // enforce UTC to match scheduling
+            quartzCron.setTimeZone(TimeZone.getTimeZone("UTC"));
 
             Date fromDate = Date.from(fromTime.toInstant());
             Date next = quartzCron.getNextValidTimeAfter(fromDate);

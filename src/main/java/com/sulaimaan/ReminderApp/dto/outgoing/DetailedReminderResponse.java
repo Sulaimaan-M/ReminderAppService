@@ -8,6 +8,9 @@ import lombok.Setter;
 
 import java.time.ZonedDateTime;
 
+/**
+ * Response DTO containing detailed reminder information along with associated task details
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,7 +20,6 @@ public class DetailedReminderResponse {
     private Long reminderId;
     private ZonedDateTime remindedAt;
     private Boolean isCompleted;
-
 
     private Long taskId;
     private String taskTxt;

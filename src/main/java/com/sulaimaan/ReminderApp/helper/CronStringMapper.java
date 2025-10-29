@@ -7,32 +7,33 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalTime;
 
+/**
+ * Utility class for building Quartz cron expressions from time details and recurrence patterns
+ */
 public class CronStringMapper {
 
-    private static final Logger logger = LoggerFactory.getLogger(CronStringMapper.class); // 🪵 Logger instance
+    private static final Logger logger = LoggerFactory.getLogger(CronStringMapper.class);
 
-    // Mapping: second minute hour dayOfMonth month dayOfWeek year (optional)
+    /**
+     * Builds a UTC-based cron expression from client time details and recurrence pattern
+     */
     public String buildCronExpression(TimeDetail timeDetail, RecurrencePattern pattern, RecurrenceType type) {
-        // 🪵 Log the inputs for cron string generation
         logger.info("🛠️ Building Cron | Type: {}, Time(client): {}:{}:{} @ {}, Pattern: D={}, W={}, M={}, Y={}",
-                type, timeDetail.hours, timeDetail.minutes, timeDetail.seconds, timeDetail.timezone, // Use field access
-                pattern.dayOfMonth, pattern.dayOfWeek, pattern.month, pattern.year); // Use field access
+                type, timeDetail.hours, timeDetail.minutes, timeDetail.seconds, timeDetail.timezone,
+                pattern.dayOfMonth, pattern.dayOfWeek, pattern.month, pattern.year);
 
-        // Convert client time details to UTC time components
         LocalTime utcTime = TimeConverter.convertToUtc(timeDetail);
         int utcSecond = utcTime.getSecond();
         int utcMinute = utcTime.getMinute();
         int utcHour = utcTime.getHour();
 
-        // 🪵 Log the UTC time components being used
         logger.debug(" UTC Time Components for Cron: {}:{}:{}", utcHour, utcMinute, utcSecond);
 
-        String cronDayOfMonth = pattern.dayOfMonth; // Use field access
-        String cronMonth = pattern.month; // Use field access
-        String cronDayOfWeek = pattern.dayOfWeek; // Use field access
-        String cronYear = pattern.year; // Use field access
+        String cronDayOfMonth = pattern.dayOfMonth;
+        String cronMonth = pattern.month;
+        String cronDayOfWeek = pattern.dayOfWeek;
+        String cronYear = pattern.year;
 
-        // Adjust pattern based on recurrence type, using UTC time
         switch (type) {
             case SIMPLE:
                 logger.debug(" SIMPLE | Using specific date from pattern for cron structure.");
@@ -69,7 +70,6 @@ public class CronStringMapper {
         String cronExpression = String.format("%d %d %d %s %s %s",
                 utcSecond, utcMinute, utcHour, cronDayOfMonth, cronMonth, cronDayOfWeek);
 
-        // 🪵 Log the final generated cron expression
         logger.info("✅ Cron Expression (UTC based): {}", cronExpression);
         return cronExpression;
     }

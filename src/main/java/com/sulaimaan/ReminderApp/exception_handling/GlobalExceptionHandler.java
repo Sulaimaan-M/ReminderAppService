@@ -14,11 +14,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
 
+/**
+ * Global exception handler for centralizing error handling across all REST controllers
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * Handles InvalidInputException and returns a BAD_REQUEST response
+     */
     @ExceptionHandler(InvalidInputException.class)
     public ResponseEntity<ExceptionResponse> handleInvalidInputException(
             InvalidInputException ex, HttpServletRequest request) {
@@ -35,6 +41,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Handles SchedulingException and returns an INTERNAL_SERVER_ERROR response
+     */
     @ExceptionHandler(SchedulingException.class)
     public ResponseEntity<ExceptionResponse> handleSchedulingException(
             SchedulingException ex, HttpServletRequest request) {
@@ -51,6 +60,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Handles validation errors from @Valid annotations and returns formatted error messages
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ExceptionResponse> handleValidationException(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
@@ -73,6 +85,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Catches all unhandled exceptions and returns a generic INTERNAL_SERVER_ERROR response
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {

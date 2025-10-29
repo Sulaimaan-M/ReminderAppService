@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller for registering device FCM tokens
+ */
 @CrossOrigin
 @RestController
 @RequestMapping("/register")
@@ -23,12 +26,17 @@ public class DeviceRegisterController {
         this.deviceTokenService = deviceTokenService;
     }
 
+    /**
+     * Registers a device's Firebase Cloud Messaging token for push notifications
+     */
     @PostMapping
     public DeviceToken registerDeviceToken(@RequestBody Map<String, String> request) {
         String token = request.get("fcmToken");
-        logger.info("📱 POST /register | tokenLen={}", token == null ? 0 : token.length());
+        logger.info("Received device registration request with FCM token length: {}", token == null ? 0 : token.length());
+
         DeviceToken saved = deviceTokenService.registerDevice(token);
-        logger.info("✅ POST /register | Returned id={}", saved.getId());
+
+        logger.info("Device registered successfully with ID: {}", saved.getId());
         return saved;
     }
 }

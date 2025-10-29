@@ -7,12 +7,15 @@ import lombok.Setter;
 
 import java.time.ZonedDateTime;
 
+/**
+ * Minimal response DTO containing basic reminder information
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MinimalReminderResponse {  // ← RENAMED
+public class MinimalReminderResponse {
     private Long id;
-    private ZonedDateTime remindedAt;  // When the reminder was actually triggered
-    private Boolean isCompleted;       // Completion status
+    private ZonedDateTime remindedAt;
+    private Boolean isCompleted;
 }

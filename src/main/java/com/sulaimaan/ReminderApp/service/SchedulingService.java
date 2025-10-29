@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.TimeZone;
 
+/**
+ * Service for managing Quartz job scheduling, rescheduling, and unscheduling of reminder tasks
+ */
 @Service
 public class SchedulingService {
 
@@ -23,6 +26,9 @@ public class SchedulingService {
         this.scheduler = scheduler;
     }
 
+    /**
+     * Schedules a task using either SimpleTrigger (for SIMPLE tasks) or CronTrigger (for recurring tasks)
+     */
     public void scheduleTask(Task task) {
         logger.info("🗓️ SchedulingService.scheduleTask | taskId={} type={} nextAt={} cron='{}'",
                 task.getId(), task.getRecurrenceType(), task.getNextReminderAt(), task.getCronExpression());
@@ -66,6 +72,9 @@ public class SchedulingService {
         }
     }
 
+    /**
+     * Reschedules a task by unscheduling and scheduling it again
+     */
     public void rescheduleTask(Task task) {
         logger.info("🔄 SchedulingService.rescheduleTask | taskId={}", task.getId());
         try {
@@ -78,6 +87,9 @@ public class SchedulingService {
         }
     }
 
+    /**
+     * Unschedules a task by deleting its Quartz job
+     */
     public void unscheduleTask(Long taskId) {
         logger.info("🗑️ SchedulingService.unscheduleTask | taskId={}", taskId);
         try {

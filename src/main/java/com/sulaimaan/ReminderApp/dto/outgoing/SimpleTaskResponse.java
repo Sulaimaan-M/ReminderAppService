@@ -7,15 +7,16 @@ import lombok.Setter;
 
 import java.time.ZonedDateTime;
 
+/**
+ * Response DTO for simple one-time tasks with associated reminder information
+ */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SimpleTaskResponse {  // ← RENAMED
+public class SimpleTaskResponse {
     private Long id;
     private String taskTxt;
-    private ZonedDateTime nextReminderAt;  // When the reminder will fire
-
-    // 🔑 Will be null until nextReminderAt time arrives
-    private MinimalReminderResponse reminder;  // ← UPDATED
+    private ZonedDateTime nextReminderAt;
+    private MinimalReminderResponse reminder;
 }

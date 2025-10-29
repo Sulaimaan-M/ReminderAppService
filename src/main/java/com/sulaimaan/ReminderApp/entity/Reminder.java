@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.ZonedDateTime;
 
+/**
+ * Entity representing a reminder instance associated with a task
+ */
 @Entity
 @Getter
 @Setter

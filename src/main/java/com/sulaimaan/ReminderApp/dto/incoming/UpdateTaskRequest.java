@@ -7,6 +7,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Request DTO for updating an existing task
+ */
 public class UpdateTaskRequest {
 
     @NotBlank(message = "Task text cannot be blank")

@@ -12,6 +12,9 @@ import lombok.AllArgsConstructor;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+/**
+ * Entity representing a task with recurrence configuration and scheduled reminders
+ */
 @Entity
 @Getter
 @Setter
@@ -51,11 +54,12 @@ public class Task {
     @Column(nullable = true)
     private String clientTimezone;
 
-    // Cascade removal of reminders when task is deleted
     @OneToMany(mappedBy = "task", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Reminder> reminders;
 
-    // Keep the constructor for manual creation
+    /**
+     * Creates a new Task with specified details and scheduling information
+     */
     public Task(String taskTxt, DeviceToken deviceToken, RecurrenceType recurrenceType, String cronExpression, ZonedDateTime createdAt, ZonedDateTime nextReminderAt, String clientTimezone) {
         this.taskTxt = taskTxt;
         this.deviceToken = deviceToken;

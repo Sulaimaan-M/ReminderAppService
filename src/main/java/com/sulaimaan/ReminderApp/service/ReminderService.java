@@ -17,6 +17,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service for managing reminder instances and their completion status
+ */
 @Service
 public class ReminderService {
 
@@ -30,6 +33,9 @@ public class ReminderService {
         this.taskRepository = taskRepository;
     }
 
+    /**
+     * Retrieves the latest incomplete reminder for each recurring task of a device
+     */
     public List<DetailedReminderResponse> getLatestIncompleteReminders(Long deviceId) {
         logger.info("📋 ReminderService.getLatestIncompleteReminders | deviceId={}", deviceId);
         List<DetailedReminderResponse> reminders = reminderRepository.findLatestIncompleteRemindersByDeviceId(deviceId);
@@ -37,6 +43,9 @@ public class ReminderService {
         return reminders;
     }
 
+    /**
+     * Retrieves all reminders associated with a specific task
+     */
     public List<DetailedReminderResponse> getRemindersByTaskId(Long taskId) {
         logger.info("📋 ReminderService.getRemindersByTaskId | taskId={}", taskId);
         List<DetailedReminderResponse> reminders = reminderRepository.findRemindersByTaskId(taskId);
@@ -44,6 +53,9 @@ public class ReminderService {
         return reminders;
     }
 
+    /**
+     * Creates a new reminder instance for a task when it is triggered
+     */
     @Transactional
     public Reminder createReminderInstance(Long taskId) {
         logger.info("🔔 ReminderService.createReminderInstance | taskId={}", taskId);
@@ -65,18 +77,12 @@ public class ReminderService {
     }
 
     /**
-     * Complete a reminder by deleting it
-     * - For SIMPLE tasks: Delete both reminder and task
-     * - For recurring tasks: Delete only the reminder instance
-     *
-     * @param reminderId ID of the reminder to complete
-     * @return true if successful, false if reminder not found
+     * Completes a reminder by deleting it; for SIMPLE tasks, deletes both reminder and task
      */
     @Transactional
     public boolean completeReminder(Long reminderId) {
         logger.info("🔔 ReminderService.completeReminder | reminderId={}", reminderId);
 
-        // Fetch the reminder by ID
         Optional<Reminder> reminderOptional = reminderRepository.findById(reminderId);
         if (reminderOptional.isEmpty()) {
             logger.warn("⚠️ ReminderService.completeReminder | Reminder not found, id={}", reminderId);
@@ -85,7 +91,6 @@ public class ReminderService {
 
         Reminder reminder = reminderOptional.get();
 
-        // Get the associated task
         Task task = reminder.getTask();
         if (task == null) {
             logger.error("❌ ReminderService.completeReminder | Reminder has no associated task, id={}", reminderId);
@@ -95,13 +100,11 @@ public class ReminderService {
         logger.info("🔍 ReminderService.completeReminder | Task type={}, reminderId={}, taskId={}",
                 task.getRecurrenceType(), reminderId, task.getId());
 
-        // For SIMPLE tasks, delete both reminder and task
         if (task.getRecurrenceType() == RecurrenceType.SIMPLE) {
             logger.info("🗑️ ReminderService.completeReminder | SIMPLE task - deleting task {} and reminder {}",
                     task.getId(), reminderId);
-            taskRepository.delete(task); // This will cascade delete the reminder due to CascadeType.REMOVE
+            taskRepository.delete(task);
         } else {
-            // For recurring tasks, delete only the reminder
             logger.info("🗑️ ReminderService.completeReminder | Recurring task - deleting reminder {}", reminderId);
             reminderRepository.delete(reminder);
         }

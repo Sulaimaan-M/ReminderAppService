@@ -26,6 +26,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service for managing task creation, updates, deletion, and scheduling
+ */
 @Service
 public class TaskService {
 
@@ -45,6 +48,9 @@ public class TaskService {
         this.cronNextExecCalculator = new CronNextExecutionCalculator();
     }
 
+    /**
+     * Creates a new task with calculated cron expression and next reminder time, then schedules it
+     */
     @Transactional
     public Task createTask(CreateTaskRequest request) {
         CronStringMapper cronMapper = new CronStringMapper();
@@ -105,6 +111,9 @@ public class TaskService {
         return savedTask;
     }
 
+    /**
+     * Updates an existing task with new details, recalculates scheduling, and reschedules the job
+     */
     @Transactional
     public Task updateTask(Long taskId, UpdateTaskRequest request) {
         CronStringMapper cronMapper = new CronStringMapper();
@@ -161,6 +170,9 @@ public class TaskService {
         return updatedTask;
     }
 
+    /**
+     * Deletes a task and unschedules its associated Quartz job
+     */
     @Transactional
     public Task deleteTask(Long taskId) {
         logger.info("🗑️ TaskService.deleteTask | taskId={}", taskId);
@@ -182,6 +194,9 @@ public class TaskService {
         return task;
     }
 
+    /**
+     * Updates the next reminder time for recurring tasks after a job execution
+     */
     @Transactional
     public void updateNextReminderTime(Long taskId, ZonedDateTime currentExecutionTimeUtc) {
         logger.info("⏭️ TaskService.updateNextReminderTime | taskId={}, currentExecutionTimeUtc={}", taskId, currentExecutionTimeUtc);
@@ -219,6 +234,9 @@ public class TaskService {
         }
     }
 
+    /**
+     * Retrieves all recurring tasks for a specific device
+     */
     public List<RecurringTaskResponse> getRecurringTasks(Long deviceId) {
         logger.info("📋 TaskService.getRecurringTasks | deviceId={}", deviceId);
         List<RecurringTaskResponse> tasks = taskRepository.findRecurringTasksByDeviceId(deviceId);
@@ -226,6 +244,9 @@ public class TaskService {
         return tasks;
     }
 
+    /**
+     * Retrieves all simple (one-time) tasks for a specific device with their reminder information
+     */
     public List<SimpleTaskResponse> getSimpleTasks(Long deviceId) {
         logger.info("📋 TaskService.getSimpleTasks | deviceId={}", deviceId);
 

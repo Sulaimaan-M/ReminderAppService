@@ -7,6 +7,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Request DTO for creating a new task with recurrence configuration
+ */
 public class CreateTaskRequest {
 
     @NotBlank(message = "Task text cannot be blank")
