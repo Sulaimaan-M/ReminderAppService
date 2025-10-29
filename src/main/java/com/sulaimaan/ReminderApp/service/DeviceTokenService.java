@@ -39,11 +39,4 @@ public class DeviceTokenService {
         return saved;
     }
 
-    /**
-     * Retrieves a device token by its ID
-     */
-    public DeviceToken getDeviceTokenById(Long id) {
-        logger.info("🔵 DeviceTokenService.getDeviceTokenById | id={}", id);
-        return deviceTokenRepo.findById(id).orElse(null);
-    }
 }

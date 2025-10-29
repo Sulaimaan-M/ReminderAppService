@@ -22,13 +22,6 @@ public class CronNextExecutionCalculator {
     private static final Logger logger = LoggerFactory.getLogger(CronNextExecutionCalculator.class);
 
     /**
-     * Calculates the next execution time from the current UTC time
-     */
-    public ZonedDateTime getNextExecutionTime(String cronExpression) {
-        return getNextExecutionTime(cronExpression, ZonedDateTime.now(ZoneOffset.UTC));
-    }
-
-    /**
      * Calculates the next execution time from a specified point in time using Quartz cron expression
      */
     public ZonedDateTime getNextExecutionTime(String cronExpression, ZonedDateTime fromTime) {

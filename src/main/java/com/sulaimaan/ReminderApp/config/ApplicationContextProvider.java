@@ -26,13 +26,4 @@ public class ApplicationContextProvider implements ApplicationContextAware {
         logger.info("ApplicationContext has been set and is now available for static access");
     }
 
-    /**
-     * Retrieves a Spring-managed bean by its class type
-     */
-    public static <T> T getBean(Class<T> beanClass) {
-        logger.debug("Retrieving bean of type: {}", beanClass.getSimpleName());
-        T bean = context.getBean(beanClass);
-        logger.debug("Successfully retrieved bean: {}", beanClass.getSimpleName());
-        return bean;
-    }
 }
