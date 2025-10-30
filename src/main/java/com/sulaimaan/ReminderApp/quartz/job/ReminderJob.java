@@ -6,7 +6,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
@@ -14,15 +13,12 @@ import java.time.ZonedDateTime;
 @Component
 public class ReminderJob implements Job {
 
-    private static ApplicationContext applicationContext;
-
     @Autowired
-    public void setApplicationContext(ApplicationContext context) {
-        ReminderJob.applicationContext = context;
-    }
+    private NotificationService notificationService;
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+        System.out.println("🚀 [ReminderJob] ===== JOB STARTED =====");
         try {
             JobDataMap data = jobExecutionContext.getJobDetail().getJobDataMap();
             String message = data.getString("message");
@@ -33,8 +29,6 @@ public class ReminderJob implements Job {
             System.out.println("📱 [ReminderJob] FCM token: " + (fcmToken != null ? fcmToken.substring(0, Math.min(10, fcmToken.length())) + "..." : "null"));
 
             if (fcmToken != null && !fcmToken.trim().isEmpty()) {
-                NotificationService notificationService =
-                        applicationContext.getBean(NotificationService.class);
                 notificationService.sendPushNotification(fcmToken, message);
                 System.out.println("✅ [ReminderJob] Notification service called");
             } else {
@@ -46,6 +40,6 @@ public class ReminderJob implements Job {
             e.printStackTrace();
             throw new JobExecutionException(e);
         }
-        System.out.println("✅ [ReminderJob] Job execution completed");
+        System.out.println("✅ [ReminderJob] ===== JOB COMPLETED =====");
     }
 }

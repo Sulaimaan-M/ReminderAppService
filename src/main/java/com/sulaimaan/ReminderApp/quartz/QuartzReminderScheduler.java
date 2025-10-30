@@ -40,6 +40,7 @@ public class QuartzReminderScheduler {
         JobDetail jobDetail = JobBuilder.newJob(ReminderJob.class)
                 .withIdentity(reminder.getId().toString())
                 .usingJobData(jobDataMap)
+                .storeDurably(false)
                 .build();
 
         Trigger trigger;
@@ -50,16 +51,24 @@ public class QuartzReminderScheduler {
             System.out.println("⏰ [QuartzScheduler] Scheduling SIMPLE reminder for UTC time: " + fireTime);
             System.out.println("⏰ [QuartzScheduler] Current UTC time: " + new Date());
 
+            // FIX: Added SimpleScheduleBuilder and forJob
             trigger = TriggerBuilder.newTrigger()
-                    .withIdentity(reminder.getId().toString())
+                    .withIdentity(reminder.getId().toString() + "_trigger")
+                    .forJob(jobDetail)
                     .startAt(fireTime)
+                    .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                            .withMisfireHandlingInstructionFireNow())
                     .build();
         } else {
             String cronExpression = CronStringBuilder.build(reminder.getRemindAt(), reminder.getIntervalType());
             System.out.println("⏰ [QuartzScheduler] Scheduling RECURRING reminder with cron: " + cronExpression);
+
+            // FIX: Added trigger identity and misfire handling
             trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(reminder.getId().toString() + "_trigger")
                     .forJob(jobDetail)
-                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)
+                            .withMisfireHandlingInstructionFireAndProceed())
                     .build();
         }
 
@@ -71,6 +80,13 @@ public class QuartzReminderScheduler {
             JobKey jobKey = JobKey.jobKey(reminder.getId().toString());
             if (scheduler.checkExists(jobKey)) {
                 System.out.println("✅ [QuartzScheduler] Verified job exists in scheduler");
+
+                // Also check next fire time
+                TriggerKey triggerKey = TriggerKey.triggerKey(reminder.getId().toString() + "_trigger");
+                Trigger scheduledTrigger = scheduler.getTrigger(triggerKey);
+                if (scheduledTrigger != null) {
+                    System.out.println("⏰ [QuartzScheduler] Next fire time: " + scheduledTrigger.getNextFireTime());
+                }
             } else {
                 System.out.println("❌ [QuartzScheduler] Job NOT found after scheduling!");
             }
